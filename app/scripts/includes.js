@@ -15,4 +15,6 @@
 /// <reference path='debris-field.ts'/>
 /// <reference path='missile.ts'/>
 /// <reference path='explosion.ts'/>
+/// <reference path='shield-damage.ts'/>
+/// <reference path='debris-field.ts'/>
 //# sourceMappingURL=includes.js.map

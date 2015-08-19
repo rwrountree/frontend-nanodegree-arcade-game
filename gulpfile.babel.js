@@ -67,6 +67,7 @@ gulp.task('copy', () =>
     gulp.src([
         'app/*',
         'app/gameart/*',
+        'app/audio/*',
         '!app/*.html',
         'node_modules/apache-server-configs/dist/.htaccess'
     ], {
@@ -84,6 +85,15 @@ gulp.task('fonts', () =>
     .pipe($.size({
         title: 'fonts'
     }))
+);
+
+// Copy web fonts to dist
+gulp.task('audio', () =>
+gulp.src(['app/audio/**'])
+  .pipe(gulp.dest('dist/audio'))
+  .pipe($.size({
+    title: 'audio'
+  }))
 );
 
 // Compile and automatically prefix stylesheets
@@ -136,7 +146,9 @@ gulp.task('scripts', () =>
         './app/scripts/debris-field.js',
         './app/scripts/missile.js',
         './app/scripts/player.js',
-        './app/scripts/game.js'
+        './app/scripts/explosion.js',
+        './app/scripts/shield-damage.js',
+        './app/scripts/game.js',
     ])
     .pipe($.concat('main.min.js'))
     .pipe($.uglify({
@@ -209,6 +221,7 @@ gulp.task('serve', ['styles'], () => {
     gulp.watch(['app/scripts/**/*.js'], ['jshint']);
     gulp.watch(['app/images/**/*'], reload);
     gulp.watch(['app/images/gameart/**/*'], reload);
+    gulp.watch(['app/audio/**/*'], reload);
 });
 
 // Build and serve the output from the dist build
@@ -228,7 +241,7 @@ gulp.task('serve:dist', ['default'], () =>
 // Build production files, the default task
 gulp.task('default', ['clean'], cb =>
     runSequence(
-        'styles', ['jshint', 'html', 'scripts', 'images', 'fonts', 'copy'],
+        'styles', ['html', 'scripts', 'images', 'fonts', 'audio', 'copy'], // ['jshint', 'html', 'scripts', 'images', 'fonts', 'copy'],
         //['html', 'scripts', 'images', 'fonts', 'copy'],
         'generate-service-worker',
         cb
@@ -263,6 +276,7 @@ gulp.task('generate-service-worker', cb => {
             rootDir + '/fonts/**/*.woff',
             rootDir + '/images/**/*',
             rootDir + '/images/gameart/**/*',
+            rootDir + '/audio/*.mp3',
             rootDir + '/scripts/**/*.js',
             rootDir + '/styles/**/*.css',
             rootDir + '/*.{html,json}'

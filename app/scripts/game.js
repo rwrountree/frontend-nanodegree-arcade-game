@@ -33,6 +33,16 @@ var GAME;
                 _this.update(0);
                 _this.collisionDetection();
                 _this.render();
+                _this.cleanup();
+            };
+            this.cleanup = function () {
+                var arrayLength = _this._animations.length, index, keeperAnimations = [];
+                for (index = 0; index < arrayLength; index++) {
+                    if (_this._animations[index].alive) {
+                        keeperAnimations.push(_this._animations[index]);
+                    }
+                }
+                _this._animations = keeperAnimations;
             };
             this.update = function (dt) {
                 GAME.Renderer.instance.pushRenderFunction(_this._background.render);
@@ -50,6 +60,11 @@ var GAME;
                     if (asteroid.alive) {
                         asteroid.update(dt);
                         GAME.Renderer.instance.pushRenderFunction(asteroid.render);
+                    }
+                });
+                _this._animations.forEach(function (explosion) {
+                    if (explosion.alive) {
+                        GAME.Renderer.instance.pushRenderFunction(explosion.render);
                     }
                 });
                 _this._spawnAsteroidTime -= 1;
@@ -77,13 +92,16 @@ var GAME;
                 }
             };
             this.collisionDetection = function () {
-                var missiles = _this._player.missiles, asteroidIndex, missileIndex, missile, asteroid, numAsteroids = _this._asteroids.length, numMissiles = missiles.length;
+                var missiles = _this._player.missiles, asteroidIndex, missileIndex, missile, asteroid, numAsteroids = _this._asteroids.length, numMissiles = missiles.length, player = _this._player, animations = _this._animations;
                 for (asteroidIndex = 0; asteroidIndex < numAsteroids; asteroidIndex++) {
                     asteroid = _this._asteroids[asteroidIndex];
-                    if (_this._player.alive) {
-                        if (asteroid.alive && RiceRocks.collided(_this._player, asteroid)) {
-                            _this._player.lives -= 1;
+                    if (player.alive) {
+                        if (asteroid.alive && RiceRocks.collided(player, asteroid)) {
+                            player.lives -= 1;
                             asteroid.alive = false;
+                            animations[animations.length] = new GAME.ShieldDamage(player.position.x, player.position.y);
+                            animations[animations.length] = new GAME.Explosion(asteroid.position.x, asteroid.position.y);
+                            new Audio("audio/explosion.mp3").play();
                         }
                     }
                     if (asteroid.alive) {
@@ -92,13 +110,16 @@ var GAME;
                             if (missile.alive && RiceRocks.collided(missile, asteroid)) {
                                 missile.alive = false;
                                 asteroid.alive = false;
-                                _this._player.score += 100;
+                                player.score += 100;
+                                animations[animations.length] = new GAME.Explosion(asteroid.position.x, asteroid.position.y);
+                                new Audio("audio/explosion.mp3").play();
                             }
                         }
                     }
                 }
             };
             this._asteroids = [];
+            this._animations = [];
             GAME.Resources.instance.load(GAME.Assets.Images.art);
             this._background = new GAME.Background();
             this._debrisField = new GAME.DebrisField();

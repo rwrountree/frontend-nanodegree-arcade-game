@@ -6,33 +6,33 @@
 
 module GAME {
   "use strict";
-  export class Explosion implements IAnimatedSprite {
+  export class ShieldDamage implements IAnimatedSprite {
     private static ANIMATION_SPEED: number = 1 ;
-    private static NUM_FRAMES: number = 64;
+    private static NUM_FRAMES: number = 24;
     // private static SPRITE_SHEET_WIDTH: number = 900;
     // private static SPRITE_SHEET_HEIGHT: number = 900;
-    private static WIDTH: number = 100;
-    private static HEIGHT: number = 100;
-    private static HALF_WIDTH: number = Explosion.WIDTH / 2;
-    private static HALF_HEIGHT: number = Explosion.HEIGHT / 2;
+    private static WIDTH: number = 128;
+    private static HEIGHT: number = 128;
+    private static HALF_WIDTH: number = ShieldDamage.WIDTH / 2;
+    private static HALF_HEIGHT: number = ShieldDamage.HEIGHT / 2;
 
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
-      var image: HTMLImageElement = GAME.Resources.instance.getImage("images/gameart/explosion.hasgraphics.png"),
+      var image: HTMLImageElement = GAME.Resources.instance.getImage("images/gameart/explosion_alpha.png"),
         xOffset: number,
         yOffset: number;
 
-      if (this._currentFrame === Explosion.NUM_FRAMES) {
+      if (this._currentFrame === ShieldDamage.NUM_FRAMES) {
         this._alive = false;
         return;
       }
 
       this._currentTickCount += 1;
-      if (this._currentTickCount % Explosion.ANIMATION_SPEED === 0) {
+      if (this._currentTickCount % ShieldDamage.ANIMATION_SPEED === 0) {
         this._currentFrame += 1;
       }
 
-      yOffset = Math.floor(this._currentFrame / 9) * Explosion.HEIGHT;
-      xOffset = (this._currentFrame % 9) * Explosion.WIDTH;
+      yOffset = 0; // nMath.floor(this._currentFrame / 9) * ShieldDamage.HEIGHT;
+      xOffset = (this._currentFrame % 24) * ShieldDamage.WIDTH;
 
       context2d.save();
       context2d.translate(this.position.x, this.position.y);
@@ -41,12 +41,12 @@ module GAME {
           image,
           xOffset,
           yOffset,
-          Explosion.WIDTH,
-          Explosion.HEIGHT,
-          -Explosion.HALF_WIDTH,
-          -Explosion.HALF_HEIGHT,
-          Explosion.WIDTH,
-          Explosion.HEIGHT
+          ShieldDamage.WIDTH,
+          ShieldDamage.HEIGHT,
+          -ShieldDamage.HALF_WIDTH,
+          -ShieldDamage.HALF_HEIGHT,
+          ShieldDamage.WIDTH,
+          ShieldDamage.HEIGHT
         );
       }
       context2d.restore();

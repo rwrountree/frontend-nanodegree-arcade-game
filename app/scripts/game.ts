@@ -39,6 +39,20 @@ module GAME {
       this.update(0);
       this.collisionDetection();
       this.render();
+      this.cleanup();
+    };
+
+    cleanup: NO_PARAMS_VOID_RETURN_FUNC = () => {
+      var arrayLength: number = this._animations.length,
+        index: number,
+        keeperAnimations: Array<IAnimatedSprite> = [];
+
+      for (index = 0; index < arrayLength; index++) {
+        if (this._animations[index].alive) {
+          keeperAnimations.push(this._animations[index]);
+        }
+      }
+      this._animations = keeperAnimations;
     };
 
     update: { (dt: number): void; } = (dt: number) => {
@@ -61,6 +75,12 @@ module GAME {
         if (asteroid.alive) {
           asteroid.update(dt);
           Renderer.instance.pushRenderFunction(asteroid.render);
+        }
+      });
+
+      this._animations.forEach((explosion: Explosion) => {
+        if (explosion.alive) {
+          Renderer.instance.pushRenderFunction(explosion.render);
         }
       });
 
@@ -97,15 +117,20 @@ module GAME {
         missile: Missile,
         asteroid: Asteroid,
         numAsteroids: number = this._asteroids.length,
-        numMissiles: number = missiles.length;
+        numMissiles: number = missiles.length,
+        player: Player = this._player,
+        animations: Array<IAnimatedSprite> = this._animations;
 
       for (asteroidIndex = 0; asteroidIndex < numAsteroids; asteroidIndex++) {
         asteroid = this._asteroids[asteroidIndex];
 
-        if (this._player.alive) {
-          if (asteroid.alive && RiceRocks.collided(this._player, asteroid)) {
-            this._player.lives -= 1;
+        if (player.alive) {
+          if (asteroid.alive && RiceRocks.collided(player, asteroid)) {
+            player.lives -= 1;
             asteroid.alive = false;
+            animations[animations.length] = new ShieldDamage(player.position.x, player.position.y);
+            animations[animations.length] = new Explosion(asteroid.position.x, asteroid.position.y);
+            new Audio("audio/explosion.mp3").play();
           }
         }
 
@@ -116,7 +141,9 @@ module GAME {
             if (missile.alive && RiceRocks.collided(missile, asteroid)) {
               missile.alive = false;
               asteroid.alive = false;
-              this._player.score += 100;
+              player.score += 100;
+              animations[animations.length] = new Explosion(asteroid.position.x, asteroid.position.y);
+              new Audio("audio/explosion.mp3").play();
             }
           }
         }
@@ -126,6 +153,7 @@ module GAME {
     private _background: Background;
     private _debrisField: DebrisField;
     private _asteroids: Array<Asteroid> = [];
+    private _animations: Array<IAnimatedSprite> = [];
     private _player: Player;
     private _last: number;
     private _gameState: GameState;

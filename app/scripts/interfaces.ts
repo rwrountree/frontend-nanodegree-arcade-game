@@ -33,4 +33,8 @@ module GAME {
   export interface IAlive {
     alive: boolean;
   }
+
+  export interface IAnimatedSprite extends IDrawable2d, IAlive {
+    //
+  }
 }
