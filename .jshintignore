@@ -1,0 +1,16 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+app/scripts/asteroid.js
+app/scripts/background.js
+app/scripts/debris-field.js
+app/scripts/engine.js
+app/scripts/game.js
+app/scripts/includes.js
+app/scripts/player.js
+app/scripts/renderer.js
+app/scripts/resources.js
+app/scripts/vector2d.js
+app/scripts/assets.js
+app/scripts/interfaces.js
+app/scripts/missile.js
+gulpfile.babel.js
