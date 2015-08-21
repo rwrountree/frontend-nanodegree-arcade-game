@@ -13,6 +13,14 @@ var GAME;
         GameState[GameState["SPLASH"] = 3] = "SPLASH";
         GameState[GameState["MENU"] = 4] = "MENU";
     })(GameState || (GameState = {}));
+    var allowedKeys;
+    (function (allowedKeys) {
+        allowedKeys[allowedKeys["space"] = 32] = "space";
+        allowedKeys[allowedKeys["left"] = 37] = "left";
+        allowedKeys[allowedKeys["up"] = 38] = "up";
+        allowedKeys[allowedKeys["right"] = 39] = "right";
+        allowedKeys[allowedKeys["down"] = 40] = "down";
+    })(allowedKeys || (allowedKeys = {}));
     GAME.SCREEN_WIDTH = 800, GAME.SCREEN_HEIGHT = 800;
     /**
      * Returns a random integer between min (inclusive) and max (inclusive)
@@ -26,7 +34,6 @@ var GAME;
             var _this = this;
             this.init = function () {
                 _this.reset();
-                _this._last = Date.now();
             };
             this.main = function () {
                 window.requestAnimationFrame(_this.main);
@@ -36,147 +43,183 @@ var GAME;
                 _this.cleanup();
             };
             this.cleanup = function () {
-                var arrayLength = _this._animations.length, index, keeperAnimations = [];
+                var arrayLength, index, keepers;
+                keepers = [];
+                arrayLength = _this.effects.length;
                 for (index = 0; index < arrayLength; index++) {
-                    if (_this._animations[index].alive) {
-                        keeperAnimations.push(_this._animations[index]);
+                    if (_this.effects[index].active) {
+                        keepers.push(_this.effects[index]);
                     }
                 }
-                _this._animations = keeperAnimations;
+                _this.effects = keepers;
+                keepers = [];
+                arrayLength = _this.asteroids.length;
+                for (index = 0; index < arrayLength; index++) {
+                    if (_this.asteroids[index].active) {
+                        keepers.push(_this.asteroids[index]);
+                    }
+                }
+                _this.asteroids = keepers;
+                keepers = [];
+                arrayLength = _this.missiles.length;
+                for (index = 0; index < arrayLength; index++) {
+                    if (_this.missiles[index].active) {
+                        keepers.push(_this.missiles[index]);
+                    }
+                }
+                _this.missiles = keepers;
             };
             this.update = function (dt) {
-                GAME.Renderer.instance.pushRenderFunction(_this._background.render);
-                _this._debrisField.update(dt);
-                GAME.Renderer.instance.pushRenderFunction(_this._debrisField.render);
-                _this._player.missiles.forEach(function (missile) {
-                    if (missile.alive) {
-                        missile.update(dt);
+                GAME.Renderer.instance.pushRenderFunction(_this.background.render);
+                _this.debrisField.update();
+                GAME.Renderer.instance.pushRenderFunction(_this.debrisField.render);
+                _this.missiles.forEach(function (missile) {
+                    if (missile.active) {
+                        missile.update();
                         GAME.Renderer.instance.pushRenderFunction(missile.render);
                     }
                 });
-                _this._player.update(dt);
-                GAME.Renderer.instance.pushRenderFunction(_this._player.render);
-                _this._asteroids.forEach(function (asteroid) {
-                    if (asteroid.alive) {
-                        asteroid.update(dt);
+                _this.player.update();
+                GAME.Renderer.instance.pushRenderFunction(_this.player.render);
+                _this.asteroids.forEach(function (asteroid) {
+                    if (asteroid.active) {
+                        asteroid.update();
                         GAME.Renderer.instance.pushRenderFunction(asteroid.render);
                     }
                 });
-                _this._animations.forEach(function (explosion) {
-                    if (explosion.alive) {
-                        GAME.Renderer.instance.pushRenderFunction(explosion.render);
+                _this.effects.forEach(function (effect) {
+                    if (effect.active) {
+                        GAME.Renderer.instance.pushRenderFunction(effect.render);
                     }
                 });
-                _this._spawnAsteroidTime -= 1;
-                if (_this._spawnAsteroidTime < 0) {
-                    var randomChoice = getRandomInt(1, 3);
-                    if (randomChoice === 1) {
-                        _this.spawnAsteroid(GAME.LargeAsteroidConfig);
-                    }
-                    else if (randomChoice === 2) {
-                        _this.spawnAsteroid(GAME.MediumAsteroidConfig);
-                    }
-                    else {
-                        _this.spawnAsteroid(GAME.SmallAsteroidConfig);
-                    }
-                    _this._spawnAsteroidTime = RiceRocks.ASTEROID_RESPAWN_TIME;
+                _this.spawnTickCounter -= 1;
+                if (_this.spawnTickCounter < 0) {
+                    _this.spawnAsteroid();
+                    _this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
                 }
             };
             this.render = function () {
                 GAME.Renderer.instance.render();
                 GAME.Renderer.instance.flush();
             };
-            this.createAsteroids = function () {
-                for (var index = 0; index < RiceRocks.MAX_ASTEROIDS; index++) {
-                    _this._asteroids[_this._asteroids.length] = new GAME.Asteroid(GAME.LargeAsteroidConfig);
+            this.spawnAsteroid = function () {
+                var asteroid, randomChoice = getRandomInt(1, 3);
+                if (randomChoice === 1) {
+                    asteroid = GAME.SpriteMaker.getSprite("asteroid-large", 0, 0);
                 }
+                else if (randomChoice === 2) {
+                    asteroid = GAME.SpriteMaker.getSprite("asteroid-medium", 0, 0);
+                }
+                else {
+                    asteroid = GAME.SpriteMaker.getSprite("asteroid-small", 0, 0);
+                }
+                asteroid.position.x = getRandomInt(0, GAME.SCREEN_WIDTH);
+                asteroid.position.y = getRandomInt(0, GAME.SCREEN_HEIGHT);
+                asteroid.velocity.x = getRandomInt(-300, 300) / 100;
+                asteroid.velocity.y = getRandomInt(-300, 300) / 100;
+                asteroid.angularVelocity = getRandomInt(-10, 10) / 100;
+                asteroid.active = true;
+                _this.asteroids.push(asteroid);
             };
             this.collisionDetection = function () {
-                var missiles = _this._player.missiles, asteroidIndex, missileIndex, missile, asteroid, numAsteroids = _this._asteroids.length, numMissiles = missiles.length, player = _this._player, animations = _this._animations;
+                var missiles = _this.missiles, asteroidIndex, missileIndex, missile, asteroid, numAsteroids = _this.asteroids.length, numMissiles = missiles.length, player = _this.player;
                 for (asteroidIndex = 0; asteroidIndex < numAsteroids; asteroidIndex++) {
-                    asteroid = _this._asteroids[asteroidIndex];
-                    if (player.alive) {
-                        if (asteroid.alive && RiceRocks.collided(player, asteroid)) {
-                            player.lives -= 1;
-                            asteroid.alive = false;
-                            animations[animations.length] = new GAME.ShieldDamage(player.position.x, player.position.y);
-                            animations[animations.length] = new GAME.Explosion(asteroid.position.x, asteroid.position.y);
+                    asteroid = _this.asteroids[asteroidIndex];
+                    if (player.active) {
+                        if (asteroid.active && RiceRocks.collided(player, asteroid)) {
+                            asteroid.active = false;
+                            _this.effects[_this.effects.length] =
+                                GAME.SpriteMaker.getSprite("shield-damage", player.position.x, player.position.y);
+                            _this.effects[_this.effects.length] =
+                                GAME.SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
                             new Audio("audio/explosion.mp3").play();
                         }
                     }
-                    if (asteroid.alive) {
+                    if (asteroid.active) {
                         for (missileIndex = 0; missileIndex < numMissiles; missileIndex++) {
                             missile = missiles[missileIndex];
-                            if (missile.alive && RiceRocks.collided(missile, asteroid)) {
-                                missile.alive = false;
-                                asteroid.alive = false;
-                                player.score += 100;
-                                animations[animations.length] = new GAME.Explosion(asteroid.position.x, asteroid.position.y);
+                            if (missile.active && RiceRocks.collided(missile, asteroid)) {
+                                missile.active = false;
+                                asteroid.active = false;
+                                _this.effects[_this.effects.length] =
+                                    GAME.SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
                                 new Audio("audio/explosion.mp3").play();
                             }
                         }
                     }
                 }
             };
-            this._asteroids = [];
-            this._animations = [];
+            this.handleInput = function (keyBoardEvent) {
+                var eventType = keyBoardEvent.type.toString();
+                var keyCode = keyBoardEvent.keyCode;
+                if (eventType === "keydown") {
+                    switch (allowedKeys[keyCode]) {
+                        case "left":
+                            _this.player.angularVelocity = -0.09;
+                            break;
+                        case "right":
+                            _this.player.angularVelocity = 0.09;
+                            break;
+                        case "up":
+                            _this.player.thrusting = true;
+                            break;
+                        default:
+                    }
+                }
+                if (eventType === "keyup") {
+                    switch (allowedKeys[keyCode]) {
+                        case "left":
+                        case "right":
+                            _this.player.angularVelocity = 0;
+                            break;
+                        case "up":
+                            _this.player.thrusting = false;
+                            break;
+                        case "space":
+                            _this.shoot();
+                            break;
+                        default:
+                    }
+                }
+            };
             GAME.Resources.instance.load(GAME.Assets.Images.art);
-            this._background = new GAME.Background();
-            this._debrisField = new GAME.DebrisField();
-            this.createAsteroids();
-            this._player = new GAME.Player();
-            this._player.position.set(GAME.SCREEN_WIDTH / 2, GAME.SCREEN_HEIGHT / 2);
-            this._last = 0;
-            this._gameState = GameState.PAUSED;
-            this._soundTrack = new Audio("audio/soundtrack.mp3");
-            this._soundTrack.loop = true;
-            this._highScore = 0;
-            this._spawnAsteroidTime = RiceRocks.ASTEROID_RESPAWN_TIME;
-            document.addEventListener("keyup", this._player.handleInput);
-            document.addEventListener("keydown", this._player.handleInput);
+            this.asteroids = [];
+            this.effects = [];
+            this.missiles = [];
+            this.background = GAME.SpriteMaker.getSprite("background", 0, 0);
+            this.debrisField = GAME.SpriteMaker.getSprite("debris-field", 0, 0);
+            this.player = GAME.SpriteMaker.getSprite("ship", GAME.SCREEN_WIDTH / 2, GAME.SCREEN_HEIGHT / 2);
+            this.gameState = GameState.PAUSED;
+            this.soundTrack = new Audio("audio/soundtrack.mp3");
+            this.soundTrack.loop = true;
+            this.highScore = 0;
+            this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
+            document.addEventListener("keyup", this.handleInput);
+            document.addEventListener("keydown", this.handleInput);
         }
+        RiceRocks.prototype.shoot = function () {
+            var forwardVector2d, player = this.player, missile = GAME.SpriteMaker.getSprite("missile", 0, 0);
+            forwardVector2d = GAME.Vector2d.angleToVector2d(this.player.angle);
+            missile.position.set(player.position.x + player.radius * forwardVector2d.x, player.position.y + player.radius * forwardVector2d.y);
+            missile.velocity.set(player.velocity.x + 6 * forwardVector2d.x, player.velocity.y + 6 * forwardVector2d.y);
+            missile.angle = player.angle;
+            this.missiles.push(missile);
+            new Audio("audio/missile.mp3").play();
+        };
         RiceRocks.collided = function (obj, otherObj) {
             return GAME.Vector2d.distance(obj.position, otherObj.position) < obj.radius + otherObj.radius;
         };
         RiceRocks.prototype.reset = function () {
-            var player = this._player, missileIndex, missiles = player.missiles, missileArrayLength = missiles.length, asteroidArrayLength = this._asteroids.length, asteroidIndex;
-            player.score = 0;
-            player.lives = 3;
-            player.position.x = (GAME.SCREEN_WIDTH / 2);
-            player.position.y = (GAME.SCREEN_WIDTH / 2);
-            for (missileIndex = 0; missileIndex < missileArrayLength; missileIndex++) {
-                missiles[missileIndex].alive = false;
-            }
-            for (asteroidIndex = 0; asteroidIndex < asteroidArrayLength; asteroidIndex++) {
-                this._asteroids[asteroidIndex].alive = false;
-            }
-            this._spawnAsteroidTime = RiceRocks.ASTEROID_RESPAWN_TIME;
-            this._soundTrack.currentTime = 0;
-            this._soundTrack.play();
-            this._gameState = GameState.RUNNING;
+            this.player.position.x = (GAME.SCREEN_WIDTH / 2);
+            this.player.position.y = (GAME.SCREEN_WIDTH / 2);
+            this.missiles = [];
+            this.asteroids = [];
+            this.effects = [];
+            this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
+            this.soundTrack.currentTime = 0;
+            this.soundTrack.play();
+            this.gameState = GameState.RUNNING;
         };
-        RiceRocks.prototype.findAvailableAsteroid = function () {
-            var asteroidIndex;
-            for (asteroidIndex = 0; asteroidIndex < RiceRocks.MAX_ASTEROIDS; asteroidIndex++) {
-                if (!this._asteroids[asteroidIndex].alive) {
-                    return this._asteroids[asteroidIndex];
-                }
-            }
-            return null;
-        };
-        RiceRocks.prototype.spawnAsteroid = function (asteroidConfig) {
-            var asteroid = this.findAvailableAsteroid();
-            if (asteroid) {
-                asteroid.position.x = getRandomInt(0, GAME.SCREEN_WIDTH);
-                asteroid.position.y = getRandomInt(0, GAME.SCREEN_HEIGHT);
-                asteroid.velocity.x = getRandomInt(-300, 300) / 100;
-                asteroid.velocity.y = getRandomInt(-300, 300) / 100;
-                asteroid.angularVelocity = getRandomInt(-10, 10) / 100;
-                asteroid.alive = true;
-                asteroid.asteroidConfig = asteroidConfig;
-            }
-        };
-        RiceRocks.MAX_ASTEROIDS = 24;
         RiceRocks.ASTEROID_RESPAWN_TIME = 30;
         return RiceRocks;
     })();

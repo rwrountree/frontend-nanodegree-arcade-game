@@ -14,6 +14,14 @@ module GAME {
     MENU
   }
 
+  enum allowedKeys {
+    space = 32,
+    left = 37,
+    up = 38,
+    right = 39,
+    down = 40
+  }
+
   export var SCREEN_WIDTH: number = 800,
              SCREEN_HEIGHT: number = 800;
 
@@ -26,12 +34,10 @@ module GAME {
   }
 
   export class RiceRocks {
-    private static MAX_ASTEROIDS: number = 24;
     private static ASTEROID_RESPAWN_TIME: number = 30;
 
     init: NO_PARAMS_VOID_RETURN_FUNC = (): void => {
       this.reset();
-      this._last = Date.now();
     };
 
     main: NO_PARAMS_VOID_RETURN_FUNC = () => {
@@ -43,59 +49,71 @@ module GAME {
     };
 
     cleanup: NO_PARAMS_VOID_RETURN_FUNC = () => {
-      var arrayLength: number = this._animations.length,
+      var arrayLength: number,
         index: number,
-        keeperAnimations: Array<IAnimatedSprite> = [];
+        keepers: Array<any>;
 
+      keepers = [];
+      arrayLength = this.effects.length;
       for (index = 0; index < arrayLength; index++) {
-        if (this._animations[index].alive) {
-          keeperAnimations.push(this._animations[index]);
+        if (this.effects[index].active) {
+          keepers.push(this.effects[index]);
         }
       }
-      this._animations = keeperAnimations;
+      this.effects = keepers;
+
+      keepers = [];
+      arrayLength = this.asteroids.length;
+      for (index = 0; index < arrayLength; index++) {
+        if (this.asteroids[index].active) {
+          keepers.push(this.asteroids[index]);
+        }
+      }
+      this.asteroids = keepers;
+
+      keepers = [];
+      arrayLength = this.missiles.length;
+      for (index = 0; index < arrayLength; index++) {
+        if (this.missiles[index].active) {
+          keepers.push(this.missiles[index]);
+        }
+      }
+      this.missiles = keepers;
     };
 
     update: { (dt: number): void; } = (dt: number) => {
-      Renderer.instance.pushRenderFunction(this._background.render);
+      Renderer.instance.pushRenderFunction(this.background.render);
 
-      this._debrisField.update(dt);
-      Renderer.instance.pushRenderFunction(this._debrisField.render);
+      this.debrisField.update();
+      Renderer.instance.pushRenderFunction(this.debrisField.render);
 
-      this._player.missiles.forEach((missile: Missile) => {
-        if (missile.alive) {
-          missile.update(dt);
+      this.missiles.forEach((missile: NewMissile) => {
+        if (missile.active) {
+          missile.update();
           Renderer.instance.pushRenderFunction(missile.render);
         }
       });
 
-      this._player.update(dt);
-      Renderer.instance.pushRenderFunction(this._player.render);
+      this.player.update();
+      Renderer.instance.pushRenderFunction(this.player.render);
 
-      this._asteroids.forEach((asteroid: Asteroid) => {
-        if (asteroid.alive) {
-          asteroid.update(dt);
+      this.asteroids.forEach((asteroid: SimulationObject) => {
+        if (asteroid.active) {
+          asteroid.update();
           Renderer.instance.pushRenderFunction(asteroid.render);
         }
       });
 
-      this._animations.forEach((explosion: Explosion) => {
-        if (explosion.alive) {
-          Renderer.instance.pushRenderFunction(explosion.render);
-        }
+      this.effects.forEach((effect: AnimatedSprite) => {
+          if (effect.active) {
+            Renderer.instance.pushRenderFunction(effect.render);
+          }
       });
 
-      this._spawnAsteroidTime -= 1;
-      if (this._spawnAsteroidTime < 0) {
-        var randomChoice: number = getRandomInt(1, 3);
-        if (randomChoice === 1) {
-          this.spawnAsteroid(GAME.LargeAsteroidConfig);
-        } else if (randomChoice === 2) {
-          this.spawnAsteroid(GAME.MediumAsteroidConfig);
-        } else {
-          this.spawnAsteroid(GAME.SmallAsteroidConfig);
-        }
-
-        this._spawnAsteroidTime = RiceRocks.ASTEROID_RESPAWN_TIME;
+      this.spawnTickCounter -= 1;
+      if (this.spawnTickCounter < 0) {
+        this.spawnAsteroid();
+        this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
       }
     };
 
@@ -104,45 +122,61 @@ module GAME {
       Renderer.instance.flush();
     };
 
-    createAsteroids: NO_PARAMS_VOID_RETURN_FUNC = () => {
-      for (var index: number = 0; index < RiceRocks.MAX_ASTEROIDS; index++) {
-        this._asteroids[this._asteroids.length] = new Asteroid(GAME.LargeAsteroidConfig);
+    spawnAsteroid: NO_PARAMS_VOID_RETURN_FUNC = () => {
+      var asteroid: SimulationObject,
+        randomChoice: number = getRandomInt(1, 3);
+
+      if (randomChoice === 1) {
+        asteroid =  SpriteMaker.getSprite("asteroid-large", 0, 0);
+      } else if (randomChoice === 2) {
+        asteroid = SpriteMaker.getSprite("asteroid-medium", 0, 0);
+      } else {
+        asteroid = SpriteMaker.getSprite("asteroid-small", 0, 0);
       }
+
+      asteroid.position.x = getRandomInt(0, SCREEN_WIDTH);
+      asteroid.position.y = getRandomInt(0, SCREEN_HEIGHT);
+      asteroid.velocity.x = getRandomInt(-300, 300) / 100;
+      asteroid.velocity.y = getRandomInt(-300, 300) / 100;
+      asteroid.angularVelocity = getRandomInt(-10, 10) / 100;
+      asteroid.active = true;
+
+      this.asteroids.push(asteroid);
     };
 
     collisionDetection: NO_PARAMS_VOID_RETURN_FUNC = () => {
-      var missiles: Array<Missile> = this._player.missiles,
+      var missiles: Array<NewMissile> = this.missiles,
         asteroidIndex: number,
         missileIndex: number,
-        missile: Missile,
-        asteroid: Asteroid,
-        numAsteroids: number = this._asteroids.length,
+        missile: NewMissile,
+        asteroid: SimulationObject,
+        numAsteroids: number = this.asteroids.length,
         numMissiles: number = missiles.length,
-        player: Player = this._player,
-        animations: Array<IAnimatedSprite> = this._animations;
+        player: NewPlayer = this.player;
 
       for (asteroidIndex = 0; asteroidIndex < numAsteroids; asteroidIndex++) {
-        asteroid = this._asteroids[asteroidIndex];
+        asteroid = this.asteroids[asteroidIndex];
 
-        if (player.alive) {
-          if (asteroid.alive && RiceRocks.collided(player, asteroid)) {
-            player.lives -= 1;
-            asteroid.alive = false;
-            animations[animations.length] = new ShieldDamage(player.position.x, player.position.y);
-            animations[animations.length] = new Explosion(asteroid.position.x, asteroid.position.y);
+        if (player.active) {
+          if (asteroid.active && RiceRocks.collided(player, asteroid)) {
+            asteroid.active = false;
+            this.effects[this.effects.length] =
+              SpriteMaker.getSprite("shield-damage", player.position.x, player.position.y);
+            this.effects[this.effects.length] =
+              SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
             new Audio("audio/explosion.mp3").play();
           }
         }
 
-        if (asteroid.alive) {
+        if (asteroid.active) {
           for (missileIndex = 0; missileIndex < numMissiles; missileIndex++) {
             missile = missiles[missileIndex];
 
-            if (missile.alive && RiceRocks.collided(missile, asteroid)) {
-              missile.alive = false;
-              asteroid.alive = false;
-              player.score += 100;
-              animations[animations.length] = new Explosion(asteroid.position.x, asteroid.position.y);
+            if (missile.active && RiceRocks.collided(missile, asteroid)) {
+              missile.active = false;
+              asteroid.active = false;
+              this.effects[this.effects.length] =
+                SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
               new Audio("audio/explosion.mp3").play();
             }
           }
@@ -150,33 +184,89 @@ module GAME {
       }
     };
 
-    private _background: Background;
-    private _debrisField: DebrisField;
-    private _asteroids: Array<Asteroid> = [];
-    private _animations: Array<IAnimatedSprite> = [];
-    private _player: Player;
-    private _last: number;
-    private _gameState: GameState;
-    private _soundTrack: HTMLAudioElement;
-    private _highScore: number;
-    private _spawnAsteroidTime: number;
+    handleInput: any = (keyBoardEvent: KeyboardEvent) => {
+      var eventType: string = keyBoardEvent.type.toString();
+      var keyCode: number = keyBoardEvent.keyCode;
+
+      if (eventType === "keydown") {
+        switch (allowedKeys[keyCode]) {
+          case "left":
+            this.player.angularVelocity = -0.09;
+            break;
+          case "right":
+            this.player.angularVelocity = 0.09;
+            break;
+          case "up":
+            this.player.thrusting = true;
+            break;
+          default:
+        }
+      }
+
+      if (eventType === "keyup") {
+        switch (allowedKeys[keyCode]) {
+          case "left":
+          case "right":
+            this.player.angularVelocity = 0;
+            break;
+          case "up":
+            this.player.thrusting = false;
+            break;
+          case "space":
+            this.shoot();
+            break;
+          default:
+        }
+      }
+    };
+
+    shoot(): void {
+      var forwardVector2d: Vector2d,
+          player: NewPlayer = this.player,
+          missile: NewMissile = SpriteMaker.getSprite("missile", 0, 0);
+
+      forwardVector2d = Vector2d.angleToVector2d(this.player.angle);
+      missile.position.set(
+        player.position.x + player.radius * forwardVector2d.x,
+        player.position.y + player.radius * forwardVector2d.y
+      );
+      missile.velocity.set(
+        player.velocity.x + 6 * forwardVector2d.x,
+        player.velocity.y + 6 * forwardVector2d.y
+      );
+      missile.angle = player.angle;
+      this.missiles.push(missile);
+      new Audio("audio/missile.mp3").play();
+    }
+
+    private background: NewBackground;
+    private debrisField: NewDebrisField;
+    private asteroids: Array<SimulationObject>;
+    private player: NewPlayer;
+
+    private gameState: GameState;
+    private soundTrack: HTMLAudioElement;
+    private highScore: number;
+    private spawnTickCounter: number;
+    private effects: Array<AnimatedSprite>;
+    private missiles: Array<NewMissile>;
 
     constructor() {
       Resources.instance.load(GAME.Assets.Images.art);
-      this._background = new Background();
-      this._debrisField = new DebrisField();
-      this.createAsteroids();
-      this._player = new Player();
-      this._player.position.set(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-      this._last = 0;
-      this._gameState = GameState.PAUSED;
-      this._soundTrack = new Audio("audio/soundtrack.mp3");
-      this._soundTrack.loop = true;
-      this._highScore = 0;
-      this._spawnAsteroidTime = RiceRocks.ASTEROID_RESPAWN_TIME;
+      this.asteroids = [];
+      this.effects = [];
+      this.missiles = [];
+      this.background = SpriteMaker.getSprite("background", 0, 0);
+      this.debrisField = SpriteMaker.getSprite("debris-field", 0, 0);
+      this.player = SpriteMaker.getSprite("ship", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+      this.gameState = GameState.PAUSED;
+      this.soundTrack = new Audio("audio/soundtrack.mp3");
+      this.soundTrack.loop = true;
+      this.highScore = 0;
+      this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
 
-      document.addEventListener("keyup", this._player.handleInput);
-      document.addEventListener("keydown", this._player.handleInput);
+      document.addEventListener("keyup", this.handleInput);
+      document.addEventListener("keydown", this.handleInput);
     }
 
     static collided(obj: ICollisionObject2d, otherObj: ICollisionObject2d): boolean {
@@ -184,55 +274,15 @@ module GAME {
     }
 
     reset(): void {
-      var player: Player = this._player,
-          missileIndex: number,
-          missiles: Array<Missile> = player.missiles,
-          missileArrayLength: number = missiles.length,
-          asteroidArrayLength: number = this._asteroids.length,
-          asteroidIndex: number;
-
-      player.score = 0;
-      player.lives = 3;
-      player.position.x = (SCREEN_WIDTH / 2);
-      player.position.y = (SCREEN_WIDTH / 2);
-
-      for (missileIndex = 0; missileIndex < missileArrayLength; missileIndex++) {
-        missiles[missileIndex].alive = false;
-      }
-
-      for (asteroidIndex = 0; asteroidIndex < asteroidArrayLength; asteroidIndex++) {
-        this._asteroids[asteroidIndex].alive = false;
-      }
-      this._spawnAsteroidTime = RiceRocks.ASTEROID_RESPAWN_TIME;
-
-      this._soundTrack.currentTime = 0;
-      this._soundTrack.play();
-      this._gameState = GameState.RUNNING;
-    }
-
-    findAvailableAsteroid(): Asteroid {
-      var asteroidIndex: number;
-
-      for (asteroidIndex = 0; asteroidIndex < RiceRocks.MAX_ASTEROIDS; asteroidIndex++) {
-        if (!this._asteroids[asteroidIndex].alive) {
-          return this._asteroids[asteroidIndex];
-        }
-      }
-      return null;
-    }
-
-    spawnAsteroid(asteroidConfig: GAME.AsteroidConfig): void {
-      var asteroid: Asteroid = this.findAvailableAsteroid();
-
-      if (asteroid) {
-        asteroid.position.x = getRandomInt(0, SCREEN_WIDTH);
-        asteroid.position.y = getRandomInt(0, SCREEN_HEIGHT);
-        asteroid.velocity.x = getRandomInt(-300, 300) / 100;
-        asteroid.velocity.y = getRandomInt(-300, 300) / 100;
-        asteroid.angularVelocity = getRandomInt(-10, 10) / 100;
-        asteroid.alive = true;
-        asteroid.asteroidConfig = asteroidConfig;
-      }
+      this.player.position.x = (SCREEN_WIDTH / 2);
+      this.player.position.y = (SCREEN_WIDTH / 2);
+      this.missiles = [];
+      this.asteroids = [];
+      this.effects = [];
+      this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
+      this.soundTrack.currentTime = 0;
+      this.soundTrack.play();
+      this.gameState = GameState.RUNNING;
     }
   }
 }

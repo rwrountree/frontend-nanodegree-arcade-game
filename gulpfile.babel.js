@@ -138,17 +138,11 @@ gulp.task('scripts', () =>
     gulp.src(['./app/scripts/main.js',
         './app/scripts/assets.js',
         './app/scripts/vector2d.js',
+        './app/scripts/sprite-configs.js',
+        './app/scripts/sprite-maker.js',
         './app/scripts/renderer.js',
-        './app/scripts/engine.js',
         './app/scripts/resources.js',
-        './app/scripts/asteroid.js',
-        './app/scripts/background.js',
-        './app/scripts/debris-field.js',
-        './app/scripts/missile.js',
-        './app/scripts/player.js',
-        './app/scripts/explosion.js',
-        './app/scripts/shield-damage.js',
-        './app/scripts/game.js',
+        './app/scripts/game.js'
     ])
     .pipe($.concat('main.min.js'))
     .pipe($.uglify({
