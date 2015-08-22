@@ -7,14 +7,17 @@ An Introduction to Interactive Programming in Python (Part 2)
 It's an asteroids(ish) clone. Yes, another Asteroids clone! Behold! :D
 
 ## Quickstart
+Open index.html from the dist folder. That is the optimized version of the game.
+
+## Game Things
 * Left: Turn Left
 * Right: Turn Right
 * Up: Thrust
 * Spacebar: Shoot
 
-## Game Things
 * The ship's shield can take 100 points of damage.
 * It takes one missile to destroy any size asteroid.
+
 * Large Asteroid: 100 points, damages for 6 points
 * Medium Asteroid: 200 points, damages for 4 points
 * Small Asteroid: 300 points, damages for 2 points
