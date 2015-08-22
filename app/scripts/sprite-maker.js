@@ -473,11 +473,11 @@ var GAME;
         SpriteMaker.getSprite = function (what, x, y) {
             switch (what) {
                 case "asteroid-small":
-                    return new Asteroid(GAME.SpriteConfigs.asteroidSmallSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y, 2, 100);
+                    return new Asteroid(GAME.SpriteConfigs.asteroidSmallSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y, 2, 300);
                 case "asteroid-medium":
                     return new Asteroid(GAME.SpriteConfigs.asteroidMediumSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y, 4, 200);
                 case "asteroid-large":
-                    return new Asteroid(GAME.SpriteConfigs.asteroidLargeSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y, 6, 300);
+                    return new Asteroid(GAME.SpriteConfigs.asteroidLargeSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y, 6, 100);
                 case "missile":
                     return new Missile(GAME.SpriteConfigs.missileSpriteInfo, x, y);
                 case "ship":

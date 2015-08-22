@@ -580,7 +580,7 @@ module GAME {
             SpriteConfigs.asteroidSmallSpriteInfo,
             SpriteConfigs.asteroidAnimationInfo,
             x, y,
-            2, 100);
+            2, 300);
         case "asteroid-medium":
           return new Asteroid(
             SpriteConfigs.asteroidMediumSpriteInfo,
@@ -592,7 +592,7 @@ module GAME {
             SpriteConfigs.asteroidLargeSpriteInfo,
             SpriteConfigs.asteroidAnimationInfo,
             x, y,
-            6, 300);
+            6, 100);
         case "missile":
           return new Missile(SpriteConfigs.missileSpriteInfo, x, y);
         case "ship":
