@@ -1,29 +1,30 @@
 /**
- * Created by Rusty on 8/13/2015.
+ * This is a modified version of resource manager from Udacity
  */
 
 /// <reference path='includes.ts'/>
 
 module GAME {
   "use strict";
-
-  export enum Sounds {
-    MISSILE = 0,
-    EXPLOSION = 1,
-    SOUNDTRACK = 2,
-    THRUST = 3
-  }
-
   /* This is a Singleton that represents the Resources class. Only one instance
    * of Resources can exist.
    */
   export class Resources {
     private static _instance: Resources = null;
 
+    /**
+     * Retrieves an image based off of its URL
+     * @param url
+     * @returns {any}
+     */
     getImage: any = (url: string) => {
       return this.resourceCache[url];
     };
 
+    /**
+     * Checks to see if a resource has been loaded
+     * @returns {boolean}
+     */
     isReady: any = () => {
       for (var k in this.resourceCache) {
         if (this.resourceCache.hasOwnProperty(k) && !this.resourceCache[k]) {
@@ -33,14 +34,13 @@ module GAME {
       return true;
     };
 
-    // onReady: any = (func: { (): void; }) => {
+    /**
+     * When resources are loaded, the supplied function will be executed
+     * @param func
+     */
     onReady: any = (func: any) => {
       this.readyCallbacks.push(func);
     };
-
-    // loadAudio: any = (audioAssets: NodeListOf<HTMLAudioElement>) => {
-    //  this.audioCache = audioAssets;
-    // };
 
     load: any = (urlOrArr: any) => {
       var that: any = this;
@@ -98,11 +98,13 @@ module GAME {
       }
     };
 
-    // public audioCache: NodeListOf<HTMLAudioElement> = [];
-
     private resourceCache: {};
     private readyCallbacks: { (): void; }[];
 
+    /**
+     * Resources constructor
+     * NOTE: This should not be called directly. Use the instance property.
+     */
     constructor() {
       if (Resources._instance) {
         throw new Error("Error: Instantiation failed: Use Resources.instance instead of new.");
@@ -113,6 +115,10 @@ module GAME {
       Resources._instance = this;
     }
 
+    /**
+     * Returns the single instance of this class
+     * @returns {Resources}
+     */
     public static get instance(): Resources {
       if (Resources._instance === null) {
         Resources._instance = new Resources();

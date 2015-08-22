@@ -1,26 +1,32 @@
 /**
- * Created by Rusty on 8/13/2015.
+ * This is a modified version of resource manager from Udacity
  */
 /// <reference path='includes.ts'/>
 var GAME;
 (function (GAME) {
     "use strict";
-    (function (Sounds) {
-        Sounds[Sounds["MISSILE"] = 0] = "MISSILE";
-        Sounds[Sounds["EXPLOSION"] = 1] = "EXPLOSION";
-        Sounds[Sounds["SOUNDTRACK"] = 2] = "SOUNDTRACK";
-        Sounds[Sounds["THRUST"] = 3] = "THRUST";
-    })(GAME.Sounds || (GAME.Sounds = {}));
-    var Sounds = GAME.Sounds;
     /* This is a Singleton that represents the Resources class. Only one instance
      * of Resources can exist.
      */
     var Resources = (function () {
+        /**
+         * Resources constructor
+         * NOTE: This should not be called directly. Use the instance property.
+         */
         function Resources() {
             var _this = this;
+            /**
+             * Retrieves an image based off of its URL
+             * @param url
+             * @returns {any}
+             */
             this.getImage = function (url) {
                 return _this.resourceCache[url];
             };
+            /**
+             * Checks to see if a resource has been loaded
+             * @returns {boolean}
+             */
             this.isReady = function () {
                 for (var k in _this.resourceCache) {
                     if (_this.resourceCache.hasOwnProperty(k) && !_this.resourceCache[k]) {
@@ -29,13 +35,13 @@ var GAME;
                 }
                 return true;
             };
-            // onReady: any = (func: { (): void; }) => {
+            /**
+             * When resources are loaded, the supplied function will be executed
+             * @param func
+             */
             this.onReady = function (func) {
                 _this.readyCallbacks.push(func);
             };
-            // loadAudio: any = (audioAssets: NodeListOf<HTMLAudioElement>) => {
-            //  this.audioCache = audioAssets;
-            // };
             this.load = function (urlOrArr) {
                 var that = _this;
                 if (urlOrArr instanceof Array) {
@@ -97,6 +103,10 @@ var GAME;
             Resources._instance = this;
         }
         Object.defineProperty(Resources, "instance", {
+            /**
+             * Returns the single instance of this class
+             * @returns {Resources}
+             */
             get: function () {
                 if (Resources._instance === null) {
                     Resources._instance = new Resources();

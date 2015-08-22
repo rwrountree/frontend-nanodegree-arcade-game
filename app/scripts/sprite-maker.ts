@@ -1,5 +1,5 @@
 /**
- * Created by Rusty on 8/20/2015.
+ * This is a collection of all the sprite types used in the game.
  */
 
 /// <reference path='includes.ts'/>
@@ -25,12 +25,22 @@ module GAME {
     finished: boolean;
   }
 
+  /**
+   * The base sprite class that all Sprites derive from
+   */
   export class Sprite implements ISprite {
-    public position: Vector2d;
+    position: Vector2d;
     visible: boolean;
     spriteInfo: SpriteInfo;
     active: boolean;
 
+    /**
+     * Sprite class constructor
+     * @param spriteInfo
+     * @param x
+     * @param y
+     * @param visible
+     */
     constructor(spriteInfo: SpriteInfo, x: number, y: number, visible: boolean = true) {
       this.spriteInfo = spriteInfo;
       this.position = new Vector2d(x, y);
@@ -38,6 +48,10 @@ module GAME {
       this.active = true;
     }
 
+    /**
+     * This function must be overridden in a subclass if used
+     * @param context2d
+     */
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       throw {
         error: "Sprite render() not implemented",
@@ -45,6 +59,9 @@ module GAME {
       };
     };
 
+    /**
+     * This function must be overridden in a subclass if used
+     */
     update: NO_PARAMS_VOID_RETURN_FUNC  = () => {
       throw {
         error: "Sprite update() not implemented",
@@ -53,6 +70,9 @@ module GAME {
     };
   }
 
+  /**
+   * Sprite class for animated effects
+   */
   export class Effect extends Sprite implements IAnimated {
     animationInfo: AnimationInfo;
     spriteInfo: SpriteInfo;
@@ -60,6 +80,13 @@ module GAME {
     tickCount: number;
     finished: boolean;
 
+    /**
+     * Effect class constructor
+     * @param spriteInfo
+     * @param animationInfo
+     * @param x
+     * @param y
+     */
     constructor(spriteInfo: SpriteInfo, animationInfo: AnimationInfo, x: number, y: number) {
       super(spriteInfo, x, y, true);
       this.animationInfo = animationInfo;
@@ -68,6 +95,10 @@ module GAME {
       this.finished = false;
     }
 
+    /**
+     * Effect render function
+     * @param context2d
+     */
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url),
         xOffset: number,
@@ -106,10 +137,24 @@ module GAME {
     };
   }
 
+  /**
+   * Background class for space nebula
+   */
   export class  Background extends Sprite {
+    /**
+     * Background class constructor
+     * @param spriteInfo
+     * @param x
+     * @param y
+     */
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
     }
+
+    /**
+     * Background render function
+     * @param context2d
+     */
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       context2d.save();
       var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url);
@@ -127,10 +172,24 @@ module GAME {
     };
   }
 
+  /**
+   * Splash class for splash screen
+   */
   export class Splash extends Sprite {
+    /**
+     * Splash constructor
+     * @param spriteInfo
+     * @param x
+     * @param y
+     */
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
     }
+
+    /**
+     * Splash render function
+     * @param context2d
+     */
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       context2d.save();
       var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url);
@@ -148,10 +207,24 @@ module GAME {
     };
   }
 
+  /**
+   * DebrisField class for asteroid debris belt
+   */
   export class DebrisField extends Sprite {
+    /**
+     * DebrisField constructor
+     * @param spriteInfo
+     * @param x
+     * @param y
+     */
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
     }
+
+    /**
+     * DebrisField render function
+     * @param context2d
+     */
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url),
           repeat: number = 2,
@@ -176,6 +249,9 @@ module GAME {
       }
     };
 
+    /**
+     * DebrisField update function
+     */
     update: NO_PARAMS_VOID_RETURN_FUNC  = () => {
       this.position.x += 1;
 
@@ -185,12 +261,21 @@ module GAME {
     };
   }
 
+  /**
+   * SimulationObject class used for objects that utilize basic physics
+   */
   export class SimulationObject extends Sprite {
     velocity: Vector2d;
     angle: number;
     angularVelocity: number;
     radius: number;
 
+    /**
+     * SimulationObject constructor
+     * @param spriteInfo
+     * @param x
+     * @param y
+     */
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
       this.velocity = new Vector2d(0, 0);
@@ -199,6 +284,9 @@ module GAME {
       this.radius = spriteInfo.radius;
     }
 
+    /**
+     * wrap function used to make sure objects stay on screen
+     */
     wrap: NO_PARAMS_VOID_RETURN_FUNC = () => {
       if (this.position.x < 0) {
         this.position.x = GAME.SCREEN_WIDTH - this.position.x;
@@ -213,6 +301,10 @@ module GAME {
       }
     };
 
+    /**
+     * SimulationObject render function
+     * @param context2d
+     */
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       if (!this.visible) {
         return;
@@ -235,6 +327,11 @@ module GAME {
       context2d .restore();
     };
 
+    /**
+     * update function to move objects
+     * NOTE: There are preUpdate and postUpdate function calls that can be overridden
+     * in a subclass to do processing before and after (Template Pattern)
+     */
     update: NO_PARAMS_VOID_RETURN_FUNC  = () => {
       this.preUpdate();
 
@@ -252,15 +349,30 @@ module GAME {
       this.postUpdate();
     };
 
+    /**
+     * Called before position and angle have been updated
+     * NOTE: Override this in a subclass if needed
+     */
     preUpdate: NO_PARAMS_VOID_RETURN_FUNC = () => {
       // no op
     };
+
+    /**
+     * Called after position and angle have been updated
+     * NOTE: Override this in a subclass if needed
+     */
     postUpdate: NO_PARAMS_VOID_RETURN_FUNC = () => {
       // no op
     };
   }
 
+  /**
+   * Missile class
+   */
   export class Missile extends SimulationObject{
+    /**
+     * Overridden function that processes how many ticks until it deactivates
+     */
     preUpdate: NO_PARAMS_VOID_RETURN_FUNC = () => {
       this.ticksToLive -= 1;
 
@@ -273,12 +385,21 @@ module GAME {
 
     private ticksToLive: number;
 
+    /**
+     * Missile class constructor
+     * @param spriteInfo
+     * @param x
+     * @param y
+     */
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
       this.ticksToLive = 60;
     }
   }
 
+  /**
+   * Asteroid class
+   */
   export class Asteroid extends SimulationObject implements IAnimated {
     animationInfo: AnimationInfo;
     frame: number;
@@ -287,6 +408,10 @@ module GAME {
     damage: number;
     points: number;
 
+    /**
+     * Asteroid render function
+     * @param context2d
+     */
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url),
         xOffset: number,
@@ -322,6 +447,15 @@ module GAME {
       context2d.restore();
     };
 
+    /**
+     * Asteroid class constructor
+     * @param spriteInfo
+     * @param animationInfo
+     * @param x
+     * @param y
+     * @param damage
+     * @param points
+     */
     constructor(spriteInfo: SpriteInfo, animationInfo: AnimationInfo, x: number, y: number, damage: number, points: number) {
       super(spriteInfo, x, y);
       this.animationInfo = animationInfo;
@@ -333,7 +467,14 @@ module GAME {
     }
   }
 
+  /**
+   * Ship class that represents the player in the game
+   */
   export class Ship extends SimulationObject {
+    /**
+     * Ship render function
+     * @param context2d
+     */
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url);
 
@@ -343,6 +484,7 @@ module GAME {
       if (image) {
         context2d.drawImage(
           image,
+          // if thrusting, use the 2nd frame in the ship image
           (this.thrusting ? this.spriteInfo.width : 0), 0,
           this.spriteInfo.width, this.spriteInfo.height,
           -this.spriteInfo.halfWidth, -this.spriteInfo.halfHeight,
@@ -352,15 +494,26 @@ module GAME {
       context2d.restore();
     };
 
+    /**
+     * Adjusts velocity and acceleration
+     */
     postUpdate: NO_PARAMS_VOID_RETURN_FUNC = () => {
       var acceleration: Vector2d;
 
+      /**
+       * Calculate velocity when thrusting using an acceleration clamp to limit
+       * maximum velocity
+       */
       if (this.thrusting) {
         acceleration = Vector2d.angleToVector2d(this.angle);
         this.velocity.x += acceleration.x * this.accelerationClamp;
         this.velocity.y += acceleration.y * this.accelerationClamp;
       }
 
+      /**
+       * Apply friction (not realistic in space!) so the ship will slowly come
+       * to a stop when not thrusting
+       */
       this.velocity.x *= this.friction;
       this.velocity.y *= this.friction;
     };
@@ -369,9 +522,15 @@ module GAME {
     maxShields: number;
     score: number;
     private _shields: number;
-    private accelerationClamp: number = 0.3;
-    private friction: number = 0.95;
+    private accelerationClamp: number = 0.3; // acceleration limiter
+    private friction: number = 0.95; // friction used to slow ship down
 
+    /**
+     * Ship class constructor
+     * @param spriteInfo
+     * @param x
+     * @param y
+     */
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
       this.thrusting = false;
@@ -381,10 +540,18 @@ module GAME {
       this.angle = Math.PI * (3 / 2);
     }
 
+    /**
+     * Gets the number of hit points remaining in the shield
+     * @returns {number}
+     */
     get shields(): number{
       return this._shields;
     }
 
+    /**
+     * Sets the number of hit points for the shield
+     * @param value
+     */
     set shields(value: number){
       this._shields = value;
       if (this._shields < 0) {
@@ -392,11 +559,19 @@ module GAME {
       }
     }
 
+    /**
+     * Retrieves the percentage left for the shield
+     * @returns {number}
+     */
     getShieldPercentage(): number {
       return this.shields / this.maxShields;
     }
   }
 
+  /**
+   * SpriteMaker class is used as a sprite factory (Factory Pattern)
+   * All sprites in the game are generated through this class
+   */
   export class SpriteMaker {
     static getSprite(what: string, x: number, y: number): any {
       switch (what) {

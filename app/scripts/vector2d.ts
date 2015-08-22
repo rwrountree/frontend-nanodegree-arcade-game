@@ -1,5 +1,5 @@
 /**
- * Created by Rusty on 8/14/2015.
+ * A simple 2 dimensional vector class
  */
 
 module GAME {
@@ -8,10 +8,21 @@ module GAME {
     private _x: number;
     private _y: number;
 
+    /**
+     * Separate the x and y values of an angle
+     * @param angle
+     * @returns {GAME.Vector2d}
+     */
     public static angleToVector2d(angle: number): Vector2d {
       return new Vector2d(Math.cos(angle), Math.sin(angle));
     }
 
+    /**
+     * Calculate the distance between 2 points
+     * @param p
+     * @param q
+     * @returns {number}
+     */
     public static distance(p: Vector2d, q: Vector2d): number {
       return Math.sqrt(Math.pow(p.x - q.x, 2) + Math.pow(p.y - q.y, 2));
     }

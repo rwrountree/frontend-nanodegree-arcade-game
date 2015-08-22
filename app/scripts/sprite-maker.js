@@ -1,5 +1,5 @@
 /**
- * Created by Rusty on 8/20/2015.
+ * This is a collection of all the sprite types used in the game.
  */
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -11,15 +11,32 @@ var __extends = (this && this.__extends) || function (d, b) {
 var GAME;
 (function (GAME) {
     "use strict";
+    /**
+     * The base sprite class that all Sprites derive from
+     */
     var Sprite = (function () {
+        /**
+         * Sprite class constructor
+         * @param spriteInfo
+         * @param x
+         * @param y
+         * @param visible
+         */
         function Sprite(spriteInfo, x, y, visible) {
             if (visible === void 0) { visible = true; }
+            /**
+             * This function must be overridden in a subclass if used
+             * @param context2d
+             */
             this.render = function (context2d) {
                 throw {
                     error: "Sprite render() not implemented",
                     message: "Implement render function in subclass"
                 };
             };
+            /**
+             * This function must be overridden in a subclass if used
+             */
             this.update = function () {
                 throw {
                     error: "Sprite update() not implemented",
@@ -34,11 +51,25 @@ var GAME;
         return Sprite;
     })();
     GAME.Sprite = Sprite;
+    /**
+     * Sprite class for animated effects
+     */
     var Effect = (function (_super) {
         __extends(Effect, _super);
+        /**
+         * Effect class constructor
+         * @param spriteInfo
+         * @param animationInfo
+         * @param x
+         * @param y
+         */
         function Effect(spriteInfo, animationInfo, x, y) {
             var _this = this;
             _super.call(this, spriteInfo, x, y, true);
+            /**
+             * Effect render function
+             * @param context2d
+             */
             this.render = function (context2d) {
                 var image = GAME.Resources.instance.getImage(_this.spriteInfo.url), xOffset, yOffset;
                 if (!_this.visible) {
@@ -70,11 +101,24 @@ var GAME;
         return Effect;
     })(Sprite);
     GAME.Effect = Effect;
+    /**
+     * Background class for space nebula
+     */
     var Background = (function (_super) {
         __extends(Background, _super);
+        /**
+         * Background class constructor
+         * @param spriteInfo
+         * @param x
+         * @param y
+         */
         function Background(spriteInfo, x, y) {
             var _this = this;
             _super.call(this, spriteInfo, x, y);
+            /**
+             * Background render function
+             * @param context2d
+             */
             this.render = function (context2d) {
                 context2d.save();
                 var image = GAME.Resources.instance.getImage(_this.spriteInfo.url);
@@ -87,11 +131,24 @@ var GAME;
         return Background;
     })(Sprite);
     GAME.Background = Background;
+    /**
+     * Splash class for splash screen
+     */
     var Splash = (function (_super) {
         __extends(Splash, _super);
+        /**
+         * Splash constructor
+         * @param spriteInfo
+         * @param x
+         * @param y
+         */
         function Splash(spriteInfo, x, y) {
             var _this = this;
             _super.call(this, spriteInfo, x, y);
+            /**
+             * Splash render function
+             * @param context2d
+             */
             this.render = function (context2d) {
                 context2d.save();
                 var image = GAME.Resources.instance.getImage(_this.spriteInfo.url);
@@ -104,11 +161,24 @@ var GAME;
         return Splash;
     })(Sprite);
     GAME.Splash = Splash;
+    /**
+     * DebrisField class for asteroid debris belt
+     */
     var DebrisField = (function (_super) {
         __extends(DebrisField, _super);
+        /**
+         * DebrisField constructor
+         * @param spriteInfo
+         * @param x
+         * @param y
+         */
         function DebrisField(spriteInfo, x, y) {
             var _this = this;
             _super.call(this, spriteInfo, x, y);
+            /**
+             * DebrisField render function
+             * @param context2d
+             */
             this.render = function (context2d) {
                 var image = GAME.Resources.instance.getImage(_this.spriteInfo.url), repeat = 2, xOffset = _this.position.x;
                 if (image) {
@@ -122,6 +192,9 @@ var GAME;
                     }
                 }
             };
+            /**
+             * DebrisField update function
+             */
             this.update = function () {
                 _this.position.x += 1;
                 if (_this.position.x >= GAME.SCREEN_WIDTH) {
@@ -132,11 +205,23 @@ var GAME;
         return DebrisField;
     })(Sprite);
     GAME.DebrisField = DebrisField;
+    /**
+     * SimulationObject class used for objects that utilize basic physics
+     */
     var SimulationObject = (function (_super) {
         __extends(SimulationObject, _super);
+        /**
+         * SimulationObject constructor
+         * @param spriteInfo
+         * @param x
+         * @param y
+         */
         function SimulationObject(spriteInfo, x, y) {
             var _this = this;
             _super.call(this, spriteInfo, x, y);
+            /**
+             * wrap function used to make sure objects stay on screen
+             */
             this.wrap = function () {
                 if (_this.position.x < 0) {
                     _this.position.x = GAME.SCREEN_WIDTH - _this.position.x;
@@ -151,6 +236,10 @@ var GAME;
                     _this.position.y = _this.position.y - GAME.SCREEN_HEIGHT;
                 }
             };
+            /**
+             * SimulationObject render function
+             * @param context2d
+             */
             this.render = function (context2d) {
                 if (!_this.visible) {
                     return;
@@ -164,6 +253,11 @@ var GAME;
                 }
                 context2d.restore();
             };
+            /**
+             * update function to move objects
+             * NOTE: There are preUpdate and postUpdate function calls that can be overridden
+             * in a subclass to do processing before and after (Template Pattern)
+             */
             this.update = function () {
                 _this.preUpdate();
                 if (!_this.active) {
@@ -175,9 +269,17 @@ var GAME;
                 _this.wrap();
                 _this.postUpdate();
             };
+            /**
+             * Called before position and angle have been updated
+             * NOTE: Override this in a subclass if needed
+             */
             this.preUpdate = function () {
                 // no op
             };
+            /**
+             * Called after position and angle have been updated
+             * NOTE: Override this in a subclass if needed
+             */
             this.postUpdate = function () {
                 // no op
             };
@@ -189,11 +291,23 @@ var GAME;
         return SimulationObject;
     })(Sprite);
     GAME.SimulationObject = SimulationObject;
+    /**
+     * Missile class
+     */
     var Missile = (function (_super) {
         __extends(Missile, _super);
+        /**
+         * Missile class constructor
+         * @param spriteInfo
+         * @param x
+         * @param y
+         */
         function Missile(spriteInfo, x, y) {
             var _this = this;
             _super.call(this, spriteInfo, x, y);
+            /**
+             * Overridden function that processes how many ticks until it deactivates
+             */
             this.preUpdate = function () {
                 _this.ticksToLive -= 1;
                 if (_this.ticksToLive <= 0) {
@@ -207,11 +321,27 @@ var GAME;
         return Missile;
     })(SimulationObject);
     GAME.Missile = Missile;
+    /**
+     * Asteroid class
+     */
     var Asteroid = (function (_super) {
         __extends(Asteroid, _super);
+        /**
+         * Asteroid class constructor
+         * @param spriteInfo
+         * @param animationInfo
+         * @param x
+         * @param y
+         * @param damage
+         * @param points
+         */
         function Asteroid(spriteInfo, animationInfo, x, y, damage, points) {
             var _this = this;
             _super.call(this, spriteInfo, x, y);
+            /**
+             * Asteroid render function
+             * @param context2d
+             */
             this.render = function (context2d) {
                 var image = GAME.Resources.instance.getImage(_this.spriteInfo.url), xOffset, yOffset;
                 if (!_this.visible) {
@@ -243,33 +373,59 @@ var GAME;
         return Asteroid;
     })(SimulationObject);
     GAME.Asteroid = Asteroid;
+    /**
+     * Ship class that represents the player in the game
+     */
     var Ship = (function (_super) {
         __extends(Ship, _super);
+        /**
+         * Ship class constructor
+         * @param spriteInfo
+         * @param x
+         * @param y
+         */
         function Ship(spriteInfo, x, y) {
             var _this = this;
             _super.call(this, spriteInfo, x, y);
+            /**
+             * Ship render function
+             * @param context2d
+             */
             this.render = function (context2d) {
                 var image = GAME.Resources.instance.getImage(_this.spriteInfo.url);
                 context2d.save();
                 context2d.translate(_this.position.x, _this.position.y);
                 context2d.rotate(_this.angle);
                 if (image) {
-                    context2d.drawImage(image, (_this.thrusting ? _this.spriteInfo.width : 0), 0, _this.spriteInfo.width, _this.spriteInfo.height, -_this.spriteInfo.halfWidth, -_this.spriteInfo.halfHeight, _this.spriteInfo.width, _this.spriteInfo.height);
+                    context2d.drawImage(image, 
+                    // if thrusting, use the 2nd frame in the ship image
+                    (_this.thrusting ? _this.spriteInfo.width : 0), 0, _this.spriteInfo.width, _this.spriteInfo.height, -_this.spriteInfo.halfWidth, -_this.spriteInfo.halfHeight, _this.spriteInfo.width, _this.spriteInfo.height);
                 }
                 context2d.restore();
             };
+            /**
+             * Adjusts velocity and acceleration
+             */
             this.postUpdate = function () {
                 var acceleration;
+                /**
+                 * Calculate velocity when thrusting using an acceleration clamp to limit
+                 * maximum velocity
+                 */
                 if (_this.thrusting) {
                     acceleration = GAME.Vector2d.angleToVector2d(_this.angle);
                     _this.velocity.x += acceleration.x * _this.accelerationClamp;
                     _this.velocity.y += acceleration.y * _this.accelerationClamp;
                 }
+                /**
+                 * Apply friction (not realistic in space!) so the ship will slowly come
+                 * to a stop when not thrusting
+                 */
                 _this.velocity.x *= _this.friction;
                 _this.velocity.y *= _this.friction;
             };
-            this.accelerationClamp = 0.3;
-            this.friction = 0.95;
+            this.accelerationClamp = 0.3; // acceleration limiter
+            this.friction = 0.95; // friction used to slow ship down
             this.thrusting = false;
             this.maxShields = 100;
             this._shields = this.maxShields;
@@ -277,9 +433,17 @@ var GAME;
             this.angle = Math.PI * (3 / 2);
         }
         Object.defineProperty(Ship.prototype, "shields", {
+            /**
+             * Gets the number of hit points remaining in the shield
+             * @returns {number}
+             */
             get: function () {
                 return this._shields;
             },
+            /**
+             * Sets the number of hit points for the shield
+             * @param value
+             */
             set: function (value) {
                 this._shields = value;
                 if (this._shields < 0) {
@@ -289,12 +453,20 @@ var GAME;
             enumerable: true,
             configurable: true
         });
+        /**
+         * Retrieves the percentage left for the shield
+         * @returns {number}
+         */
         Ship.prototype.getShieldPercentage = function () {
             return this.shields / this.maxShields;
         };
         return Ship;
     })(SimulationObject);
     GAME.Ship = Ship;
+    /**
+     * SpriteMaker class is used as a sprite factory (Factory Pattern)
+     * All sprites in the game are generated through this class
+     */
     var SpriteMaker = (function () {
         function SpriteMaker() {
         }

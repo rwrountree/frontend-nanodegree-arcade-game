@@ -1,5 +1,5 @@
 /**
- * Created by Rusty on 8/13/2015.
+ * This is the Render object that is used to manage draw calls
  */
 /// <reference path='includes.ts'/>
 var GAME;
@@ -9,18 +9,28 @@ var GAME;
      * of Renderer can exist.
      */
     var Renderer = (function () {
+        /**
+         * Renderer constructor
+         * NOTE: Do not call this directly. Use the instance property.
+         */
         function Renderer() {
             var _this = this;
+            /**
+             * Render functions from sprites are pushed into an array to create a list of
+             * render commands
+             * @param renderFunc
+             */
             this.pushRenderFunction = function (renderFunc) {
                 _this.renderFunctionList.push(renderFunc);
             };
+            /**
+             * Runs through all the render calls that have been pushed to the list
+             */
             this.render = function () {
-                // this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
-                // this._context.save();
+                _this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);
                 _this.renderFunctionList.forEach(function (renderFunc) {
                     renderFunc(_this.context);
                 });
-                // this._context.restore();
             };
             this.renderFunctionList = [];
             this.context = null;
@@ -31,6 +41,10 @@ var GAME;
             Renderer._instance = this;
         }
         Object.defineProperty(Renderer, "instance", {
+            /**
+             * Retrieves the single instance of the Renderer
+             * @returns {Renderer}
+             */
             get: function () {
                 if (Renderer._instance === null) {
                     Renderer._instance = new Renderer();

@@ -1,5 +1,5 @@
 /**
- * Created by Rusty on 8/15/2015.
+ * Array of images used in the game
  */
 var GAME;
 (function (GAME) {

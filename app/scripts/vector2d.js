@@ -1,5 +1,5 @@
 /**
- * Created by Rusty on 8/14/2015.
+ * A simple 2 dimensional vector class
  */
 var GAME;
 (function (GAME) {
@@ -9,9 +9,20 @@ var GAME;
             this._x = x;
             this._y = y;
         }
+        /**
+         * Separate the x and y values of an angle
+         * @param angle
+         * @returns {GAME.Vector2d}
+         */
         Vector2d.angleToVector2d = function (angle) {
             return new Vector2d(Math.cos(angle), Math.sin(angle));
         };
+        /**
+         * Calculate the distance between 2 points
+         * @param p
+         * @param q
+         * @returns {number}
+         */
         Vector2d.distance = function (p, q) {
             return Math.sqrt(Math.pow(p.x - q.x, 2) + Math.pow(p.y - q.y, 2));
         };

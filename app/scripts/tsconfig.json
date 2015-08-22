@@ -2,9 +2,10 @@
   "compilerOptions": {
     "module": "commonjs",
     "noImplicitAny": true,
-    "removeComments": true,
+    "removeComments": false,
     "preserveConstEnums": true,
     //"out": "../../built/local/tsc.js",
+    "noResolve": true,
     "sourceMap": true,
     "target": "ES5"
   }
