@@ -12,19 +12,19 @@ var GAME;
         function Renderer() {
             var _this = this;
             this.pushRenderFunction = function (renderFunc) {
-                _this._renderFunctionList.push(renderFunc);
+                _this.renderFunctionList.push(renderFunc);
             };
             this.render = function () {
                 // this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
                 // this._context.save();
-                _this._renderFunctionList.forEach(function (renderFunc) {
-                    renderFunc(_this._context);
+                _this.renderFunctionList.forEach(function (renderFunc) {
+                    renderFunc(_this.context);
                 });
                 // this._context.restore();
             };
-            this._renderFunctionList = [];
-            this._context = null;
-            this._canvas = null;
+            this.renderFunctionList = [];
+            this.context = null;
+            this.canvas = null;
             if (Renderer._instance) {
                 throw new Error(Renderer.ERROR_DO_NOT_CALL_CONSTRUCTOR);
             }
@@ -41,13 +41,13 @@ var GAME;
             configurable: true
         });
         Renderer.prototype.setContext = function (context) {
-            this._context = context;
+            this.context = context;
         };
         Renderer.prototype.setCanvas = function (canvas) {
-            this._canvas = canvas;
+            this.canvas = canvas;
         };
         Renderer.prototype.flush = function () {
-            this._renderFunctionList = [];
+            this.renderFunctionList = [];
         };
         Renderer.ERROR_DO_NOT_CALL_CONSTRUCTOR = "Error: Instantiation failed: Use Resources.instance instead of new.";
         Renderer._instance = null;

@@ -115,6 +115,8 @@ module GAME {
         this.spawnAsteroid();
         this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
       }
+
+      Renderer.instance.pushRenderFunction(this.renderUI);
     };
 
     render: NO_PARAMS_VOID_RETURN_FUNC = () => {
@@ -123,8 +125,8 @@ module GAME {
     };
 
     spawnAsteroid: NO_PARAMS_VOID_RETURN_FUNC = () => {
-      var asteroid:Asteroid,
-        randomChoice:number = getRandomInt(1, 3);
+      var asteroid: Asteroid,
+        randomChoice: number = getRandomInt(1, 3);
 
       if (randomChoice === 1) {
         asteroid = SpriteMaker.getSprite("asteroid-large", 0, 0);
@@ -169,6 +171,10 @@ module GAME {
             this.effects[this.effects.length] =
               SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
             new Audio("audio/explosion.mp3").play();
+            this.player.shields -= 2;
+            if (this.player.shields < 0) {
+              this.player.shields = 0;
+            }
           }
         }
 
@@ -224,6 +230,55 @@ module GAME {
       }
     };
 
+    renderUI: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
+      var width: number = (SCREEN_WIDTH * 0.2),
+          height: number = 20,
+          x: number = (SCREEN_WIDTH / 2) - (width / 2),
+          y: number = 20,
+          lineWidth: number = 4,
+          percentLeft: number = (this.player.shields / this.player.maxShields);
+
+      if (percentLeft * 100 > 0) {
+        context2d.save();
+        context2d.lineWidth = 0;
+        context2d.fillStyle = this.getShieldRGBA();
+        var shieldGaugeX: number = (x + lineWidth) + (width - (width * percentLeft));
+        var shieldGaugeWidth: number = (width * percentLeft) - (2 * lineWidth);
+        if (shieldGaugeX < 0) {
+          shieldGaugeX = 0;
+        }
+        if (shieldGaugeWidth < 0) {
+          shieldGaugeWidth = 0;
+        }
+        context2d.fillRect(
+          shieldGaugeX,
+          y + lineWidth,
+          shieldGaugeWidth,
+          (height) - (2 * lineWidth)
+        );
+        context2d.stroke();
+        context2d.restore();
+      }
+
+      context2d.save();
+      context2d.font = "18px Arial";
+      context2d.textAlign = "left";
+      context2d.fillStyle = "white";
+      context2d.fillText(
+        Math.floor(percentLeft * 100).toString() + "%",
+        x + (lineWidth),
+        y + (lineWidth * 4)
+      );
+      context2d.stroke();
+      context2d.restore();
+
+      context2d.save();
+      context2d.lineWidth = lineWidth;
+      context2d.strokeStyle = "rgba(255,255,255,0.75)";
+      context2d.strokeRect(x, y, width, height);
+      context2d.restore();
+    };
+
     private background: Background;
     private debrisField: DebrisField;
     private asteroids: Array<Asteroid>;
@@ -231,10 +286,11 @@ module GAME {
 
     private gameState: GameState;
     private soundTrack: HTMLAudioElement;
-    private highScore: number;
     private spawnTickCounter: number;
     private effects: Array<Effect>;
     private missiles: Array<Missile>;
+    // private score: number = 0;
+    private highScore: number;
 
     constructor() {
       Resources.instance.load(GAME.Assets.Images.art);
@@ -256,6 +312,27 @@ module GAME {
 
     static collided(obj: SimulationObject, otherObj: SimulationObject): boolean {
       return Vector2d.distance(obj.position, otherObj.position) < obj.radius + otherObj.radius;
+    }
+
+    getShieldRGBA(): string {
+      var r: number,
+          g: number,
+          b: number = 0,
+          a: number = 0.75,
+          rgba: Array<number>,
+          percentLeft: number = this.player.shields / this.player.maxShields;
+
+      if (Math.floor(percentLeft * 100) > 50) {
+        r = (255 - Math.floor(percentLeft * 255)) * 2;
+        g = 255;
+      } else {
+        r = 255;
+        g = Math.floor(percentLeft * 255) * 2;
+      }
+
+      rgba = [r, g, b, a];
+
+      return "rgba(" + rgba.join(",") + ")";
     }
 
     reset(): void {

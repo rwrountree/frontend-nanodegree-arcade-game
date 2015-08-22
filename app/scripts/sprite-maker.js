@@ -249,9 +249,12 @@ var GAME;
                 _this.velocity.x *= _this.friction;
                 _this.velocity.y *= _this.friction;
             };
+            this.maxShields = 100;
             this.accelerationClamp = 0.3;
             this.friction = 0.95;
             this.thrusting = false;
+            this.shields = 100;
+            this.maxShields = 100;
         }
         return Ship;
     })(SimulationObject);

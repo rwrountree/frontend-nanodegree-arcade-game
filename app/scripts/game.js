@@ -97,6 +97,7 @@ var GAME;
                     _this.spawnAsteroid();
                     _this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
                 }
+                GAME.Renderer.instance.pushRenderFunction(_this.renderUI);
             };
             this.render = function () {
                 GAME.Renderer.instance.render();
@@ -137,6 +138,10 @@ var GAME;
                             _this.effects[_this.effects.length] =
                                 GAME.SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
                             new Audio("audio/explosion.mp3").play();
+                            _this.player.shields -= 2;
+                            if (_this.player.shields < 0) {
+                                _this.player.shields = 0;
+                            }
                         }
                     }
                     if (asteroid.active) {
@@ -186,6 +191,37 @@ var GAME;
                     }
                 }
             };
+            this.renderUI = function (context2d) {
+                var width = (GAME.SCREEN_WIDTH * 0.2), height = 20, x = (GAME.SCREEN_WIDTH / 2) - (width / 2), y = 20, lineWidth = 4, percentLeft = (_this.player.shields / _this.player.maxShields);
+                if (percentLeft * 100 > 0) {
+                    context2d.save();
+                    context2d.lineWidth = 0;
+                    context2d.fillStyle = _this.getShieldRGBA();
+                    var shieldGaugeX = (x + lineWidth) + (width - (width * percentLeft));
+                    var shieldGaugeWidth = (width * percentLeft) - (2 * lineWidth);
+                    if (shieldGaugeX < 0) {
+                        shieldGaugeX = 0;
+                    }
+                    if (shieldGaugeWidth < 0) {
+                        shieldGaugeWidth = 0;
+                    }
+                    context2d.fillRect(shieldGaugeX, y + lineWidth, shieldGaugeWidth, (height) - (2 * lineWidth));
+                    context2d.stroke();
+                    context2d.restore();
+                }
+                context2d.save();
+                context2d.font = "18px Arial";
+                context2d.textAlign = "left";
+                context2d.fillStyle = "white";
+                context2d.fillText(Math.floor(percentLeft * 100).toString() + "%", x + (lineWidth), y + (lineWidth * 4));
+                context2d.stroke();
+                context2d.restore();
+                context2d.save();
+                context2d.lineWidth = lineWidth;
+                context2d.strokeStyle = "rgba(255,255,255,0.75)";
+                context2d.strokeRect(x, y, width, height);
+                context2d.restore();
+            };
             GAME.Resources.instance.load(GAME.Assets.Images.art);
             this.asteroids = [];
             this.effects = [];
@@ -203,6 +239,19 @@ var GAME;
         }
         RiceRocks.collided = function (obj, otherObj) {
             return GAME.Vector2d.distance(obj.position, otherObj.position) < obj.radius + otherObj.radius;
+        };
+        RiceRocks.prototype.getShieldRGBA = function () {
+            var r, g, b = 0, a = 0.75, rgba, percentLeft = this.player.shields / this.player.maxShields;
+            if (Math.floor(percentLeft * 100) > 50) {
+                r = (255 - Math.floor(percentLeft * 255)) * 2;
+                g = 255;
+            }
+            else {
+                r = 255;
+                g = Math.floor(percentLeft * 255) * 2;
+            }
+            rgba = [r, g, b, a];
+            return "rgba(" + rgba.join(",") + ")";
         };
         RiceRocks.prototype.reset = function () {
             this.player.position.x = (GAME.SCREEN_WIDTH / 2);

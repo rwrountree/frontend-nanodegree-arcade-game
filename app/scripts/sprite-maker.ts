@@ -340,13 +340,17 @@ module GAME {
       this.velocity.y *= this.friction;
     };
 
-    public thrusting: boolean;
+    thrusting: boolean;
+    shields: number;
+    maxShields: number = 100;
     private accelerationClamp: number = 0.3;
     private friction: number = 0.95;
 
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
       this.thrusting = false;
+      this.shields = 100;
+      this.maxShields = 100;
     }
   }
 

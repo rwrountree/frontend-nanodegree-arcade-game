@@ -16,21 +16,21 @@ module GAME {
     private static _instance: Renderer = null;
 
     pushRenderFunction: { (renderFunc: RENDER_FUNC): void } = (renderFunc: RENDER_FUNC) => {
-      this._renderFunctionList.push(renderFunc);
+      this.renderFunctionList.push(renderFunc);
     };
 
     render: NO_PARAMS_VOID_RETURN_FUNC = () => {
       // this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
       // this._context.save();
-      this._renderFunctionList.forEach((renderFunc: RENDER_FUNC): void => {
-        renderFunc(this._context);
+      this.renderFunctionList.forEach((renderFunc: RENDER_FUNC): void => {
+        renderFunc(this.context);
       });
       // this._context.restore();
     };
 
-    private _renderFunctionList: Array<RENDER_FUNC> = [];
-    private _context: CanvasRenderingContext2D = null;
-    private _canvas: HTMLCanvasElement = null;
+    private renderFunctionList: Array<RENDER_FUNC> = [];
+    private context: CanvasRenderingContext2D = null;
+    private canvas: HTMLCanvasElement = null;
 
     constructor() {
       if (Renderer._instance) {
@@ -49,15 +49,15 @@ module GAME {
     }
 
     setContext(context: CanvasRenderingContext2D): void {
-      this._context = context;
+      this.context = context;
     }
 
     setCanvas(canvas: HTMLCanvasElement): void {
-      this._canvas = canvas;
+      this.canvas = canvas;
     }
 
     flush(): void {
-      this._renderFunctionList = [];
+      this.renderFunctionList = [];
     }
   }
 }
