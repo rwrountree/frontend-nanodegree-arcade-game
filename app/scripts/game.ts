@@ -87,7 +87,7 @@ module GAME {
       this.debrisField.update();
       Renderer.instance.pushRenderFunction(this.debrisField.render);
 
-      this.missiles.forEach((missile: NewMissile) => {
+      this.missiles.forEach((missile: Missile) => {
         if (missile.active) {
           missile.update();
           Renderer.instance.pushRenderFunction(missile.render);
@@ -145,14 +145,14 @@ module GAME {
     };
 
     collisionDetection: NO_PARAMS_VOID_RETURN_FUNC = () => {
-      var missiles: Array<NewMissile> = this.missiles,
+      var missiles: Array<Missile> = this.missiles,
         asteroidIndex: number,
         missileIndex: number,
-        missile: NewMissile,
+        missile: Missile,
         asteroid: SimulationObject,
         numAsteroids: number = this.asteroids.length,
         numMissiles: number = missiles.length,
-        player: NewPlayer = this.player;
+        player: Ship = this.player;
 
       for (asteroidIndex = 0; asteroidIndex < numAsteroids; asteroidIndex++) {
         asteroid = this.asteroids[asteroidIndex];
@@ -222,8 +222,8 @@ module GAME {
 
     shoot(): void {
       var forwardVector2d: Vector2d,
-          player: NewPlayer = this.player,
-          missile: NewMissile = SpriteMaker.getSprite("missile", 0, 0);
+          player: Ship = this.player,
+          missile: Missile = SpriteMaker.getSprite("missile", 0, 0);
 
       forwardVector2d = Vector2d.angleToVector2d(this.player.angle);
       missile.position.set(
@@ -239,17 +239,17 @@ module GAME {
       new Audio("audio/missile.mp3").play();
     }
 
-    private background: NewBackground;
-    private debrisField: NewDebrisField;
+    private background: Background;
+    private debrisField: DebrisField;
     private asteroids: Array<SimulationObject>;
-    private player: NewPlayer;
+    private player: Ship;
 
     private gameState: GameState;
     private soundTrack: HTMLAudioElement;
     private highScore: number;
     private spawnTickCounter: number;
     private effects: Array<AnimatedSprite>;
-    private missiles: Array<NewMissile>;
+    private missiles: Array<Missile>;
 
     constructor() {
       Resources.instance.load(GAME.Assets.Images.art);
@@ -269,7 +269,7 @@ module GAME {
       document.addEventListener("keydown", this.handleInput);
     }
 
-    static collided(obj: ICollisionObject2d, otherObj: ICollisionObject2d): boolean {
+    static collided(obj: SimulationObject, otherObj: SimulationObject): boolean {
       return Vector2d.distance(obj.position, otherObj.position) < obj.radius + otherObj.radius;
     }
 

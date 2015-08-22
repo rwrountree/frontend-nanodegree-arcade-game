@@ -90,7 +90,7 @@ module GAME {
     };
   }
 
-  export class  NewBackground extends Sprite {
+  export class  Background extends Sprite {
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
     }
@@ -111,7 +111,7 @@ module GAME {
     };
   }
 
-  export class NewDebrisField extends Sprite {
+  export class DebrisField extends Sprite {
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
     }
@@ -224,7 +224,7 @@ module GAME {
     };
   }
 
-  export class NewMissile extends SimulationObject{
+  export class Missile extends SimulationObject{
     preUpdate: NO_PARAMS_VOID_RETURN_FUNC = () => {
       this.ticksToLive -= 1;
 
@@ -245,7 +245,7 @@ module GAME {
     }
   }
 
-  export class NewPlayer extends SimulationObject {
+  export class Ship extends SimulationObject {
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url);
 
@@ -301,9 +301,9 @@ module GAME {
         case "asteroid-large":
           return new SimulationObject(SpriteConfigs.asteroidLargeSpriteInfo, x, y);
         case "missile":
-          return new NewMissile(SpriteConfigs.missileSpriteInfo, x, y);
+          return new Missile(SpriteConfigs.missileSpriteInfo, x, y);
         case "ship":
-          return new NewPlayer(SpriteConfigs.shipSpriteInfo, x, y);
+          return new Ship(SpriteConfigs.shipSpriteInfo, x, y);
         case "explosion":
           return new AnimatedSprite(
             SpriteConfigs.explosionSpriteInfo,
@@ -315,9 +315,9 @@ module GAME {
             SpriteConfigs.shieldDamageAnimationInfo,
             x, y);
         case "background":
-          return new NewBackground(SpriteConfigs.backgroundSpriteInfo, x, y);
+          return new Background(SpriteConfigs.backgroundSpriteInfo, x, y);
         case "debris-field":
-          return new NewDebrisField(SpriteConfigs.debrisFieldSpriteInfo, x, y);
+          return new DebrisField(SpriteConfigs.debrisFieldSpriteInfo, x, y);
         default:
           throw {
             error: "Invalid Sprite Type",
