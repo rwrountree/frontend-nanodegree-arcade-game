@@ -37,10 +37,23 @@ var GAME;
             };
             this.main = function () {
                 window.requestAnimationFrame(_this.main);
-                _this.update(0);
-                _this.collisionDetection();
-                _this.render();
-                _this.cleanup();
+                switch (_this.gameState) {
+                    case GameState.SPLASH:
+                        _this.updateSplash(0);
+                        _this.render();
+                        break;
+                    case GameState.RUNNING:
+                        _this.update(0);
+                        _this.collisionDetection();
+                        _this.render();
+                        _this.cleanup();
+                        break;
+                    default:
+                        throw {
+                            error: "Invalid Game State",
+                            message: "Check the GameState enumeration for valid states"
+                        };
+                }
             };
             this.cleanup = function () {
                 var arrayLength, index, keepers;
@@ -68,6 +81,13 @@ var GAME;
                     }
                 }
                 _this.missiles = keepers;
+            };
+            this.updateSplash = function () {
+                GAME.Renderer.instance.pushRenderFunction(_this.background.render);
+                _this.debrisField.update();
+                GAME.Renderer.instance.pushRenderFunction(_this.debrisField.render);
+                GAME.Renderer.instance.pushRenderFunction(_this.splash.render);
+                GAME.Renderer.instance.pushRenderFunction(_this.renderUI);
             };
             this.update = function () {
                 GAME.Renderer.instance.pushRenderFunction(_this.background.render);
@@ -138,10 +158,8 @@ var GAME;
                             _this.effects[_this.effects.length] =
                                 GAME.SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
                             new Audio("audio/explosion.mp3").play();
-                            _this.player.shields -= 2;
-                            if (_this.player.shields < 0) {
-                                _this.player.shields = 0;
-                            }
+                            _this.player.shields -= asteroid.damage;
+                            _this.player.score += asteroid.points;
                         }
                     }
                     if (asteroid.active) {
@@ -153,21 +171,35 @@ var GAME;
                                 _this.effects[_this.effects.length] =
                                     GAME.SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
                                 new Audio("audio/explosion.mp3").play();
+                                _this.player.score += asteroid.points;
                             }
                         }
                     }
+                }
+                if (_this.player.score > _this.highScore) {
+                    _this.highScore = _this.player.score;
+                }
+                if (_this.player.shields === 0) {
+                    _this.gameState = GameState.SPLASH;
+                    _this.reset();
+                    return;
                 }
             };
             this.handleInput = function (keyBoardEvent) {
                 var eventType = keyBoardEvent.type.toString();
                 var keyCode = keyBoardEvent.keyCode;
+                if (eventType === "mousedown") {
+                    if (_this.gameState === GameState.SPLASH) {
+                        _this.gameState = GameState.RUNNING;
+                    }
+                }
                 if (eventType === "keydown") {
                     switch (allowedKeys[keyCode]) {
                         case "left":
-                            _this.player.angularVelocity = -0.09;
+                            _this.player.angularVelocity = -0.10;
                             break;
                         case "right":
-                            _this.player.angularVelocity = 0.09;
+                            _this.player.angularVelocity = 0.10;
                             break;
                         case "up":
                             _this.player.thrusting = true;
@@ -192,23 +224,11 @@ var GAME;
                 }
             };
             this.renderUI = function (context2d) {
-                var width = (GAME.SCREEN_WIDTH * 0.2), height = 20, x = (GAME.SCREEN_WIDTH / 2) - (width / 2), y = 20, lineWidth = 4, percentLeft = (_this.player.shields / _this.player.maxShields);
-                if (percentLeft * 100 > 0) {
-                    context2d.save();
-                    context2d.lineWidth = 0;
-                    context2d.fillStyle = _this.getShieldRGBA();
-                    var shieldGaugeX = (x + lineWidth) + (width - (width * percentLeft));
-                    var shieldGaugeWidth = (width * percentLeft) - (2 * lineWidth);
-                    if (shieldGaugeX < 0) {
-                        shieldGaugeX = 0;
-                    }
-                    if (shieldGaugeWidth < 0) {
-                        shieldGaugeWidth = 0;
-                    }
-                    context2d.fillRect(shieldGaugeX, y + lineWidth, shieldGaugeWidth, (height) - (2 * lineWidth));
-                    context2d.stroke();
-                    context2d.restore();
-                }
+                var width = (GAME.SCREEN_WIDTH * 0.2), height = 20, x = (GAME.SCREEN_WIDTH / 2) - (width / 2), y = 20, lineWidth = 4, percentLeft = _this.player.getShieldPercentage();
+                context2d.save();
+                context2d.fillStyle = _this.getShieldRGBA();
+                context2d.fillRect(x + (width - (width * percentLeft)), y, width * percentLeft, height);
+                context2d.restore();
                 context2d.save();
                 context2d.font = "18px Arial";
                 context2d.textAlign = "left";
@@ -221,6 +241,12 @@ var GAME;
                 context2d.strokeStyle = "rgba(255,255,255,0.75)";
                 context2d.strokeRect(x, y, width, height);
                 context2d.restore();
+                context2d.save();
+                context2d.font = "20px Arial";
+                context2d.fillStyle = "rgba(255,255,255,0.75)";
+                context2d.fillText("Score: " + _this.player.score, 20, 37);
+                context2d.fillText("Hi: " + _this.highScore, GAME.SCREEN_WIDTH - context2d.measureText("Hi: " + _this.highScore).width - 20, 37);
+                context2d.restore();
             };
             GAME.Resources.instance.load(GAME.Assets.Images.art);
             this.asteroids = [];
@@ -229,19 +255,21 @@ var GAME;
             this.background = GAME.SpriteMaker.getSprite("background", 0, 0);
             this.debrisField = GAME.SpriteMaker.getSprite("debris-field", 0, 0);
             this.player = GAME.SpriteMaker.getSprite("ship", GAME.SCREEN_WIDTH / 2, GAME.SCREEN_HEIGHT / 2);
-            this.gameState = GameState.PAUSED;
+            this.gameState = GameState.SPLASH;
             this.soundTrack = new Audio("audio/soundtrack.mp3");
             this.soundTrack.loop = true;
             this.highScore = 0;
             this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
+            this.splash = GAME.SpriteMaker.getSprite("splash", GAME.SCREEN_WIDTH / 2, GAME.SCREEN_HEIGHT / 2);
             document.addEventListener("keyup", this.handleInput);
             document.addEventListener("keydown", this.handleInput);
+            document.addEventListener("mousedown", this.handleInput);
         }
         RiceRocks.collided = function (obj, otherObj) {
             return GAME.Vector2d.distance(obj.position, otherObj.position) < obj.radius + otherObj.radius;
         };
         RiceRocks.prototype.getShieldRGBA = function () {
-            var r, g, b = 0, a = 0.75, rgba, percentLeft = this.player.shields / this.player.maxShields;
+            var r, g, b = 0, a = 0.75, rgba, percentLeft = this.player.getShieldPercentage();
             if (Math.floor(percentLeft * 100) > 50) {
                 r = (255 - Math.floor(percentLeft * 255)) * 2;
                 g = 255;
@@ -254,15 +282,12 @@ var GAME;
             return "rgba(" + rgba.join(",") + ")";
         };
         RiceRocks.prototype.reset = function () {
-            this.player.position.x = (GAME.SCREEN_WIDTH / 2);
-            this.player.position.y = (GAME.SCREEN_WIDTH / 2);
-            this.missiles = [];
             this.asteroids = [];
             this.effects = [];
-            this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
+            this.missiles = [];
+            this.background = GAME.SpriteMaker.getSprite("background", 0, 0);
+            this.player = GAME.SpriteMaker.getSprite("ship", GAME.SCREEN_WIDTH / 2, GAME.SCREEN_HEIGHT / 2);
             this.soundTrack.currentTime = 0;
-            this.soundTrack.play();
-            this.gameState = GameState.RUNNING;
         };
         RiceRocks.prototype.shoot = function () {
             var forwardVector2d, player = this.player, missile = GAME.SpriteMaker.getSprite("missile", 0, 0);
@@ -273,7 +298,7 @@ var GAME;
             this.missiles.push(missile);
             new Audio("audio/missile.mp3").play();
         };
-        RiceRocks.ASTEROID_RESPAWN_TIME = 20;
+        RiceRocks.ASTEROID_RESPAWN_TIME = 30;
         return RiceRocks;
     })();
     GAME.RiceRocks = RiceRocks;

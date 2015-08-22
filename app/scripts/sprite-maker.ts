@@ -127,6 +127,27 @@ module GAME {
     };
   }
 
+  export class Splash extends Sprite {
+    constructor(spriteInfo: SpriteInfo, x: number, y: number) {
+      super(spriteInfo, x, y);
+    }
+    render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
+      context2d.save();
+      var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url);
+
+      if (image) {
+        context2d.drawImage(
+          image,
+          0, 0,
+          this.spriteInfo.width, this.spriteInfo.height,
+          this.position.x - this.spriteInfo.halfWidth, this.position.y - this.spriteInfo.halfHeight,
+          this.spriteInfo.width, this.spriteInfo.height
+        );
+      }
+      context2d.restore();
+    };
+  }
+
   export class DebrisField extends Sprite {
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
@@ -263,6 +284,8 @@ module GAME {
     frame: number;
     tickCount: number;
     finished: boolean;
+    damage: number;
+    points: number;
 
     render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
       var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url),
@@ -299,12 +322,14 @@ module GAME {
       context2d.restore();
     };
 
-    constructor(spriteInfo: SpriteInfo, animationInfo: AnimationInfo, x: number, y: number) {
+    constructor(spriteInfo: SpriteInfo, animationInfo: AnimationInfo, x: number, y: number, damage: number, points: number) {
       super(spriteInfo, x, y);
       this.animationInfo = animationInfo;
       this.frame = 0;
       this.tickCount = -1;
       this.finished = false;
+      this.damage = damage;
+      this.points = points;
     }
   }
 
@@ -341,16 +366,34 @@ module GAME {
     };
 
     thrusting: boolean;
-    shields: number;
-    maxShields: number = 100;
+    maxShields: number;
+    score: number;
+    private _shields: number;
     private accelerationClamp: number = 0.3;
     private friction: number = 0.95;
 
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
       this.thrusting = false;
-      this.shields = 100;
       this.maxShields = 100;
+      this._shields = this.maxShields;
+      this.score = 0;
+      this.angle = Math.PI * (3 / 2);
+    }
+
+    get shields(): number{
+      return this._shields;
+    }
+
+    set shields(value: number){
+      this._shields = value;
+      if (this._shields < 0) {
+        this._shields = 0;
+      }
+    }
+
+    getShieldPercentage(): number {
+      return this.shields / this.maxShields;
     }
   }
 
@@ -361,17 +404,20 @@ module GAME {
           return new Asteroid(
             SpriteConfigs.asteroidSmallSpriteInfo,
             SpriteConfigs.asteroidAnimationInfo,
-            x, y);
+            x, y,
+            2, 100);
         case "asteroid-medium":
           return new Asteroid(
             SpriteConfigs.asteroidMediumSpriteInfo,
             SpriteConfigs.asteroidAnimationInfo,
-            x, y);
+            x, y,
+            4, 200);
         case "asteroid-large":
           return new Asteroid(
             SpriteConfigs.asteroidLargeSpriteInfo,
             SpriteConfigs.asteroidAnimationInfo,
-            x, y);
+            x, y,
+            6, 300);
         case "missile":
           return new Missile(SpriteConfigs.missileSpriteInfo, x, y);
         case "ship":
@@ -390,6 +436,8 @@ module GAME {
           return new Background(SpriteConfigs.backgroundSpriteInfo, x, y);
         case "debris-field":
           return new DebrisField(SpriteConfigs.debrisFieldSpriteInfo, x, y);
+        case "splash":
+          return new Splash(SpriteConfigs.splashSpriteInfo, x, y);
         default:
           throw {
             error: "Invalid Sprite Type",

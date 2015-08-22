@@ -47,22 +47,25 @@ module GAME {
 
     public static asteroidAnimationInfo: AnimationInfo = new AnimationInfo(3, 24);
     public static asteroidLargeSpriteInfo: SpriteInfo = new SpriteInfo(
-      "images/gameart/asteroid_large_animated.png", 96, 96, 40);
+      "images/gameart/asteroid_large_animated.png", 96, 96, 26);
     public static asteroidMediumSpriteInfo: SpriteInfo = new SpriteInfo(
-      "images/gameart/asteroid_medium_animated.png", 72, 72, 30);
+      "images/gameart/asteroid_medium_animated.png", 72, 72, 17);
     public static asteroidSmallSpriteInfo: SpriteInfo = new SpriteInfo(
-      "images/gameart/asteroid_small_animated.png", 48, 48, 20);
+      "images/gameart/asteroid_small_animated.png", 48, 48, 13);
 
     public static missileSpriteInfo: SpriteInfo = new SpriteInfo(
-      "images/gameart/shot2.png", 10, 10, 3);
+      "images/gameart/shot2.png", 10, 10, 9);
 
     public static shipSpriteInfo: SpriteInfo = new SpriteInfo(
-      "images/gameart/double_ship.png", 90, 90, 35);
+      "images/gameart/double_ship.png", 90, 90, 30);
 
     public static backgroundSpriteInfo: SpriteInfo = new SpriteInfo(
       "images/gameart/nebula_blue.f2014.png", 800, 600);
 
     public static debrisFieldSpriteInfo: SpriteInfo = new SpriteInfo(
       "images/gameart/debris2_blue.png", 640, 480);
+
+    public static splashSpriteInfo: SpriteInfo = new SpriteInfo(
+      "images/gameart/splash.png", 400, 300);
   }
 }

@@ -87,6 +87,23 @@ var GAME;
         return Background;
     })(Sprite);
     GAME.Background = Background;
+    var Splash = (function (_super) {
+        __extends(Splash, _super);
+        function Splash(spriteInfo, x, y) {
+            var _this = this;
+            _super.call(this, spriteInfo, x, y);
+            this.render = function (context2d) {
+                context2d.save();
+                var image = GAME.Resources.instance.getImage(_this.spriteInfo.url);
+                if (image) {
+                    context2d.drawImage(image, 0, 0, _this.spriteInfo.width, _this.spriteInfo.height, _this.position.x - _this.spriteInfo.halfWidth, _this.position.y - _this.spriteInfo.halfHeight, _this.spriteInfo.width, _this.spriteInfo.height);
+                }
+                context2d.restore();
+            };
+        }
+        return Splash;
+    })(Sprite);
+    GAME.Splash = Splash;
     var DebrisField = (function (_super) {
         __extends(DebrisField, _super);
         function DebrisField(spriteInfo, x, y) {
@@ -192,7 +209,7 @@ var GAME;
     GAME.Missile = Missile;
     var Asteroid = (function (_super) {
         __extends(Asteroid, _super);
-        function Asteroid(spriteInfo, animationInfo, x, y) {
+        function Asteroid(spriteInfo, animationInfo, x, y, damage, points) {
             var _this = this;
             _super.call(this, spriteInfo, x, y);
             this.render = function (context2d) {
@@ -220,6 +237,8 @@ var GAME;
             this.frame = 0;
             this.tickCount = -1;
             this.finished = false;
+            this.damage = damage;
+            this.points = points;
         }
         return Asteroid;
     })(SimulationObject);
@@ -249,13 +268,30 @@ var GAME;
                 _this.velocity.x *= _this.friction;
                 _this.velocity.y *= _this.friction;
             };
-            this.maxShields = 100;
             this.accelerationClamp = 0.3;
             this.friction = 0.95;
             this.thrusting = false;
-            this.shields = 100;
             this.maxShields = 100;
+            this._shields = this.maxShields;
+            this.score = 0;
+            this.angle = Math.PI * (3 / 2);
         }
+        Object.defineProperty(Ship.prototype, "shields", {
+            get: function () {
+                return this._shields;
+            },
+            set: function (value) {
+                this._shields = value;
+                if (this._shields < 0) {
+                    this._shields = 0;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Ship.prototype.getShieldPercentage = function () {
+            return this.shields / this.maxShields;
+        };
         return Ship;
     })(SimulationObject);
     GAME.Ship = Ship;
@@ -265,11 +301,11 @@ var GAME;
         SpriteMaker.getSprite = function (what, x, y) {
             switch (what) {
                 case "asteroid-small":
-                    return new Asteroid(GAME.SpriteConfigs.asteroidSmallSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y);
+                    return new Asteroid(GAME.SpriteConfigs.asteroidSmallSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y, 2, 100);
                 case "asteroid-medium":
-                    return new Asteroid(GAME.SpriteConfigs.asteroidMediumSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y);
+                    return new Asteroid(GAME.SpriteConfigs.asteroidMediumSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y, 4, 200);
                 case "asteroid-large":
-                    return new Asteroid(GAME.SpriteConfigs.asteroidLargeSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y);
+                    return new Asteroid(GAME.SpriteConfigs.asteroidLargeSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y, 6, 300);
                 case "missile":
                     return new Missile(GAME.SpriteConfigs.missileSpriteInfo, x, y);
                 case "ship":
@@ -282,6 +318,8 @@ var GAME;
                     return new Background(GAME.SpriteConfigs.backgroundSpriteInfo, x, y);
                 case "debris-field":
                     return new DebrisField(GAME.SpriteConfigs.debrisFieldSpriteInfo, x, y);
+                case "splash":
+                    return new Splash(GAME.SpriteConfigs.splashSpriteInfo, x, y);
                 default:
                     throw {
                         error: "Invalid Sprite Type",

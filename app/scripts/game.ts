@@ -34,7 +34,7 @@ module GAME {
   }
 
   export class RiceRocks {
-    private static ASTEROID_RESPAWN_TIME: number = 20;
+    private static ASTEROID_RESPAWN_TIME: number = 30;
 
     init: NO_PARAMS_VOID_RETURN_FUNC = (): void => {
       this.reset();
@@ -42,10 +42,24 @@ module GAME {
 
     main: NO_PARAMS_VOID_RETURN_FUNC = () => {
       window.requestAnimationFrame(this.main);
-      this.update(0);
-      this.collisionDetection();
-      this.render();
-      this.cleanup();
+
+      switch (this.gameState) {
+        case GameState.SPLASH:
+          this.updateSplash(0);
+          this.render();
+          break;
+        case GameState.RUNNING:
+          this.update(0);
+          this.collisionDetection();
+          this.render();
+          this.cleanup();
+          break;
+        default:
+          throw {
+            error: "Invalid Game State",
+            message: "Check the GameState enumeration for valid states"
+          };
+      }
     };
 
     cleanup: NO_PARAMS_VOID_RETURN_FUNC = () => {
@@ -79,6 +93,14 @@ module GAME {
         }
       }
       this.missiles = keepers;
+    };
+
+    updateSplash: { (dt: number): void; } = () => {
+      Renderer.instance.pushRenderFunction(this.background.render);
+      this.debrisField.update();
+      Renderer.instance.pushRenderFunction(this.debrisField.render);
+      Renderer.instance.pushRenderFunction(this.splash.render);
+      Renderer.instance.pushRenderFunction(this.renderUI);
     };
 
     update: { (dt: number): void; } = () => {
@@ -155,7 +177,7 @@ module GAME {
         asteroidIndex: number,
         missileIndex: number,
         missile: Missile,
-        asteroid: SimulationObject,
+        asteroid: Asteroid,
         numAsteroids: number = this.asteroids.length,
         numMissiles: number = missiles.length,
         player: Ship = this.player;
@@ -171,10 +193,8 @@ module GAME {
             this.effects[this.effects.length] =
               SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
             new Audio("audio/explosion.mp3").play();
-            this.player.shields -= 2;
-            if (this.player.shields < 0) {
-              this.player.shields = 0;
-            }
+            this.player.shields -= asteroid.damage;
+            this.player.score += asteroid.points;
           }
         }
 
@@ -188,9 +208,20 @@ module GAME {
               this.effects[this.effects.length] =
                 SpriteMaker.getSprite("explosion", asteroid.position.x, asteroid.position.y);
               new Audio("audio/explosion.mp3").play();
+              this.player.score += asteroid.points;
             }
           }
         }
+      }
+
+      if (this.player.score > this.highScore) {
+        this.highScore = this.player.score;
+      }
+
+      if (this.player.shields === 0) {
+        this.gameState = GameState.SPLASH;
+        this.reset();
+        return;
       }
     };
 
@@ -198,13 +229,19 @@ module GAME {
       var eventType: string = keyBoardEvent.type.toString();
       var keyCode: number = keyBoardEvent.keyCode;
 
+      if (eventType === "mousedown") {
+        if (this.gameState === GameState.SPLASH) {
+          this.gameState = GameState.RUNNING;
+        }
+      }
+
       if (eventType === "keydown") {
         switch (allowedKeys[keyCode]) {
           case "left":
-            this.player.angularVelocity = -0.09;
+            this.player.angularVelocity = -0.10;
             break;
           case "right":
-            this.player.angularVelocity = 0.09;
+            this.player.angularVelocity = 0.10;
             break;
           case "up":
             this.player.thrusting = true;
@@ -236,29 +273,17 @@ module GAME {
           x: number = (SCREEN_WIDTH / 2) - (width / 2),
           y: number = 20,
           lineWidth: number = 4,
-          percentLeft: number = (this.player.shields / this.player.maxShields);
+          percentLeft: number = this.player.getShieldPercentage();
 
-      if (percentLeft * 100 > 0) {
-        context2d.save();
-        context2d.lineWidth = 0;
-        context2d.fillStyle = this.getShieldRGBA();
-        var shieldGaugeX: number = (x + lineWidth) + (width - (width * percentLeft));
-        var shieldGaugeWidth: number = (width * percentLeft) - (2 * lineWidth);
-        if (shieldGaugeX < 0) {
-          shieldGaugeX = 0;
-        }
-        if (shieldGaugeWidth < 0) {
-          shieldGaugeWidth = 0;
-        }
-        context2d.fillRect(
-          shieldGaugeX,
-          y + lineWidth,
-          shieldGaugeWidth,
-          (height) - (2 * lineWidth)
-        );
-        context2d.stroke();
-        context2d.restore();
-      }
+      context2d.save();
+      context2d.fillStyle = this.getShieldRGBA();
+      context2d.fillRect(
+        x + (width - (width * percentLeft)),
+        y,
+        width * percentLeft,
+        height
+      );
+      context2d.restore();
 
       context2d.save();
       context2d.font = "18px Arial";
@@ -277,8 +302,19 @@ module GAME {
       context2d.strokeStyle = "rgba(255,255,255,0.75)";
       context2d.strokeRect(x, y, width, height);
       context2d.restore();
+
+      context2d.save();
+      context2d.font = "20px Arial";
+      context2d.fillStyle = "rgba(255,255,255,0.75)";
+      context2d.fillText("Score: " + this.player.score, 20, 37);
+      context2d.fillText(
+        "Hi: " + this.highScore,
+        SCREEN_WIDTH - context2d.measureText("Hi: " + this.highScore).width - 20,
+        37);
+      context2d.restore();
     };
 
+    private splash: Splash;
     private background: Background;
     private debrisField: DebrisField;
     private asteroids: Array<Asteroid>;
@@ -289,7 +325,6 @@ module GAME {
     private spawnTickCounter: number;
     private effects: Array<Effect>;
     private missiles: Array<Missile>;
-    // private score: number = 0;
     private highScore: number;
 
     constructor() {
@@ -300,14 +335,16 @@ module GAME {
       this.background = SpriteMaker.getSprite("background", 0, 0);
       this.debrisField = SpriteMaker.getSprite("debris-field", 0, 0);
       this.player = SpriteMaker.getSprite("ship", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-      this.gameState = GameState.PAUSED;
+      this.gameState = GameState.SPLASH;
       this.soundTrack = new Audio("audio/soundtrack.mp3");
       this.soundTrack.loop = true;
       this.highScore = 0;
       this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
+      this.splash = SpriteMaker.getSprite("splash", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
       document.addEventListener("keyup", this.handleInput);
       document.addEventListener("keydown", this.handleInput);
+      document.addEventListener("mousedown", this.handleInput);
     }
 
     static collided(obj: SimulationObject, otherObj: SimulationObject): boolean {
@@ -320,7 +357,7 @@ module GAME {
           b: number = 0,
           a: number = 0.75,
           rgba: Array<number>,
-          percentLeft: number = this.player.shields / this.player.maxShields;
+          percentLeft: number = this.player.getShieldPercentage();
 
       if (Math.floor(percentLeft * 100) > 50) {
         r = (255 - Math.floor(percentLeft * 255)) * 2;
@@ -336,15 +373,12 @@ module GAME {
     }
 
     reset(): void {
-      this.player.position.x = (SCREEN_WIDTH / 2);
-      this.player.position.y = (SCREEN_WIDTH / 2);
-      this.missiles = [];
       this.asteroids = [];
       this.effects = [];
-      this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
+      this.missiles = [];
+      this.background = SpriteMaker.getSprite("background", 0, 0);
+      this.player = SpriteMaker.getSprite("ship", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
       this.soundTrack.currentTime = 0;
-      this.soundTrack.play();
-      this.gameState = GameState.RUNNING;
     }
 
     shoot(): void {
