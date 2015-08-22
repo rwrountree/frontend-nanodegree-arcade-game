@@ -69,7 +69,7 @@ var GAME;
                 }
                 _this.missiles = keepers;
             };
-            this.update = function (dt) {
+            this.update = function () {
                 GAME.Renderer.instance.pushRenderFunction(_this.background.render);
                 _this.debrisField.update();
                 GAME.Renderer.instance.pushRenderFunction(_this.debrisField.render);
@@ -113,8 +113,12 @@ var GAME;
                 else {
                     asteroid = GAME.SpriteMaker.getSprite("asteroid-small", 0, 0);
                 }
-                asteroid.position.x = getRandomInt(0, GAME.SCREEN_WIDTH);
-                asteroid.position.y = getRandomInt(0, GAME.SCREEN_HEIGHT);
+                var positionX = getRandomInt(1, 2);
+                var positionY = getRandomInt(1, 2);
+                positionX = positionX === 1 ? 0 : GAME.SCREEN_WIDTH;
+                positionY = positionY === 1 ? 0 : GAME.SCREEN_HEIGHT;
+                asteroid.position.x = positionX; // getRandomInt(0, SCREEN_WIDTH);
+                asteroid.position.y = positionY; // getRandomInt(0, SCREEN_HEIGHT);
                 asteroid.velocity.x = getRandomInt(-300, 300) / 100;
                 asteroid.velocity.y = getRandomInt(-300, 300) / 100;
                 asteroid.angularVelocity = getRandomInt(-10, 10) / 100;
@@ -197,15 +201,6 @@ var GAME;
             document.addEventListener("keyup", this.handleInput);
             document.addEventListener("keydown", this.handleInput);
         }
-        RiceRocks.prototype.shoot = function () {
-            var forwardVector2d, player = this.player, missile = GAME.SpriteMaker.getSprite("missile", 0, 0);
-            forwardVector2d = GAME.Vector2d.angleToVector2d(this.player.angle);
-            missile.position.set(player.position.x + player.radius * forwardVector2d.x, player.position.y + player.radius * forwardVector2d.y);
-            missile.velocity.set(player.velocity.x + 6 * forwardVector2d.x, player.velocity.y + 6 * forwardVector2d.y);
-            missile.angle = player.angle;
-            this.missiles.push(missile);
-            new Audio("audio/missile.mp3").play();
-        };
         RiceRocks.collided = function (obj, otherObj) {
             return GAME.Vector2d.distance(obj.position, otherObj.position) < obj.radius + otherObj.radius;
         };
@@ -220,7 +215,16 @@ var GAME;
             this.soundTrack.play();
             this.gameState = GameState.RUNNING;
         };
-        RiceRocks.ASTEROID_RESPAWN_TIME = 30;
+        RiceRocks.prototype.shoot = function () {
+            var forwardVector2d, player = this.player, missile = GAME.SpriteMaker.getSprite("missile", 0, 0);
+            forwardVector2d = GAME.Vector2d.angleToVector2d(this.player.angle);
+            missile.position.set(player.position.x + player.radius * forwardVector2d.x, player.position.y + player.radius * forwardVector2d.y);
+            missile.velocity.set(player.velocity.x + 6 * forwardVector2d.x, player.velocity.y + 6 * forwardVector2d.y);
+            missile.angle = player.angle;
+            this.missiles.push(missile);
+            new Audio("audio/missile.mp3").play();
+        };
+        RiceRocks.ASTEROID_RESPAWN_TIME = 20;
         return RiceRocks;
     })();
     GAME.RiceRocks = RiceRocks;

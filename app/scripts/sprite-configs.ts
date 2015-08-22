@@ -45,12 +45,13 @@ module GAME {
     public static shieldDamageSpriteInfo: SpriteInfo = new SpriteInfo(
       "images/gameart/explosion_alpha.png", 128, 128);
 
+    public static asteroidAnimationInfo: AnimationInfo = new AnimationInfo(3, 24);
     public static asteroidLargeSpriteInfo: SpriteInfo = new SpriteInfo(
-      "images/gameart/asteroid_blue.png", 90, 90, 40);
+      "images/gameart/asteroid_large_animated.png", 96, 96, 40);
     public static asteroidMediumSpriteInfo: SpriteInfo = new SpriteInfo(
-      "images/gameart/asteroid_blue_medium.png", 68, 68, 30);
+      "images/gameart/asteroid_medium_animated.png", 72, 72, 30);
     public static asteroidSmallSpriteInfo: SpriteInfo = new SpriteInfo(
-      "images/gameart/asteroid_blue_small.png", 45, 45, 20);
+      "images/gameart/asteroid_small_animated.png", 48, 48, 20);
 
     public static missileSpriteInfo: SpriteInfo = new SpriteInfo(
       "images/gameart/shot2.png", 10, 10, 3);

@@ -34,9 +34,9 @@ var GAME;
         return Sprite;
     })();
     GAME.Sprite = Sprite;
-    var AnimatedSprite = (function (_super) {
-        __extends(AnimatedSprite, _super);
-        function AnimatedSprite(spriteInfo, animationInfo, x, y) {
+    var Effect = (function (_super) {
+        __extends(Effect, _super);
+        function Effect(spriteInfo, animationInfo, x, y) {
             var _this = this;
             _super.call(this, spriteInfo, x, y, true);
             this.render = function (context2d) {
@@ -67,9 +67,9 @@ var GAME;
             this.tickCount = -1;
             this.finished = false;
         }
-        return AnimatedSprite;
+        return Effect;
     })(Sprite);
-    GAME.AnimatedSprite = AnimatedSprite;
+    GAME.Effect = Effect;
     var Background = (function (_super) {
         __extends(Background, _super);
         function Background(spriteInfo, x, y) {
@@ -117,7 +117,6 @@ var GAME;
     GAME.DebrisField = DebrisField;
     var SimulationObject = (function (_super) {
         __extends(SimulationObject, _super);
-        // active: boolean;
         function SimulationObject(spriteInfo, x, y) {
             var _this = this;
             _super.call(this, spriteInfo, x, y);
@@ -187,11 +186,44 @@ var GAME;
                 }
             };
             this.ticksToLive = 60;
-            this.active = true;
         }
         return Missile;
     })(SimulationObject);
     GAME.Missile = Missile;
+    var Asteroid = (function (_super) {
+        __extends(Asteroid, _super);
+        function Asteroid(spriteInfo, animationInfo, x, y) {
+            var _this = this;
+            _super.call(this, spriteInfo, x, y);
+            this.render = function (context2d) {
+                var image = GAME.Resources.instance.getImage(_this.spriteInfo.url), xOffset, yOffset;
+                if (!_this.visible) {
+                    return;
+                }
+                if (_this.frame === _this.animationInfo.numberOfFrames) {
+                    _this.frame = 0;
+                }
+                _this.tickCount += 1;
+                if (_this.tickCount % _this.animationInfo.animationSpeed === 0) {
+                    _this.frame += 1;
+                }
+                xOffset = (_this.frame % 9) * _this.spriteInfo.width;
+                yOffset = 0;
+                context2d.save();
+                context2d.translate(_this.position.x, _this.position.y);
+                if (image) {
+                    context2d.drawImage(image, xOffset, yOffset, _this.spriteInfo.width, _this.spriteInfo.height, -_this.spriteInfo.halfWidth, -_this.spriteInfo.halfHeight, _this.spriteInfo.width, _this.spriteInfo.height);
+                }
+                context2d.restore();
+            };
+            this.animationInfo = animationInfo;
+            this.frame = 0;
+            this.tickCount = -1;
+            this.finished = false;
+        }
+        return Asteroid;
+    })(SimulationObject);
+    GAME.Asteroid = Asteroid;
     var Ship = (function (_super) {
         __extends(Ship, _super);
         function Ship(spriteInfo, x, y) {
@@ -230,19 +262,19 @@ var GAME;
         SpriteMaker.getSprite = function (what, x, y) {
             switch (what) {
                 case "asteroid-small":
-                    return new SimulationObject(GAME.SpriteConfigs.asteroidSmallSpriteInfo, x, y);
+                    return new Asteroid(GAME.SpriteConfigs.asteroidSmallSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y);
                 case "asteroid-medium":
-                    return new SimulationObject(GAME.SpriteConfigs.asteroidMediumSpriteInfo, x, y);
+                    return new Asteroid(GAME.SpriteConfigs.asteroidMediumSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y);
                 case "asteroid-large":
-                    return new SimulationObject(GAME.SpriteConfigs.asteroidLargeSpriteInfo, x, y);
+                    return new Asteroid(GAME.SpriteConfigs.asteroidLargeSpriteInfo, GAME.SpriteConfigs.asteroidAnimationInfo, x, y);
                 case "missile":
                     return new Missile(GAME.SpriteConfigs.missileSpriteInfo, x, y);
                 case "ship":
                     return new Ship(GAME.SpriteConfigs.shipSpriteInfo, x, y);
                 case "explosion":
-                    return new AnimatedSprite(GAME.SpriteConfigs.explosionSpriteInfo, GAME.SpriteConfigs.explosionAnimationInfo, x, y);
+                    return new Effect(GAME.SpriteConfigs.explosionSpriteInfo, GAME.SpriteConfigs.explosionAnimationInfo, x, y);
                 case "shield-damage":
-                    return new AnimatedSprite(GAME.SpriteConfigs.shieldDamageSpriteInfo, GAME.SpriteConfigs.shieldDamageAnimationInfo, x, y);
+                    return new Effect(GAME.SpriteConfigs.shieldDamageSpriteInfo, GAME.SpriteConfigs.shieldDamageAnimationInfo, x, y);
                 case "background":
                     return new Background(GAME.SpriteConfigs.backgroundSpriteInfo, x, y);
                 case "debris-field":

@@ -9,7 +9,23 @@ module GAME {
   export type NO_PARAMS_VOID_RETURN_FUNC = { (): void; };
   export type RENDER_FUNC = { (context: CanvasRenderingContext2D): void; };
 
-  export class Sprite {
+  export interface ISprite {
+    position: Vector2d;
+    visible: boolean;
+    spriteInfo: SpriteInfo;
+    active: boolean;
+    render: RENDER_FUNC;
+    update: NO_PARAMS_VOID_RETURN_FUNC;
+  }
+
+  export interface IAnimated extends ISprite {
+    animationInfo: AnimationInfo;
+    frame: number;
+    tickCount: number;
+    finished: boolean;
+  }
+
+  export class Sprite implements ISprite {
     public position: Vector2d;
     visible: boolean;
     spriteInfo: SpriteInfo;
@@ -37,7 +53,7 @@ module GAME {
     };
   }
 
-  export class AnimatedSprite extends Sprite {
+  export class Effect extends Sprite implements IAnimated {
     animationInfo: AnimationInfo;
     spriteInfo: SpriteInfo;
     frame: number;
@@ -153,7 +169,6 @@ module GAME {
     angle: number;
     angularVelocity: number;
     radius: number;
-    // active: boolean;
 
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
@@ -235,13 +250,61 @@ module GAME {
       }
     };
 
-    active: boolean;
     private ticksToLive: number;
 
     constructor(spriteInfo: SpriteInfo, x: number, y: number) {
       super(spriteInfo, x, y);
       this.ticksToLive = 60;
-      this.active = true;
+    }
+  }
+
+  export class Asteroid extends SimulationObject implements IAnimated {
+    animationInfo: AnimationInfo;
+    frame: number;
+    tickCount: number;
+    finished: boolean;
+
+    render: RENDER_FUNC = (context2d: CanvasRenderingContext2D) => {
+      var image: HTMLImageElement = GAME.Resources.instance.getImage(this.spriteInfo.url),
+        xOffset: number,
+        yOffset: number;
+
+      if (!this.visible) {
+        return;
+      }
+
+      if (this.frame === this.animationInfo.numberOfFrames) {
+        this.frame = 0;
+      }
+
+      this.tickCount += 1;
+      if (this.tickCount % this.animationInfo.animationSpeed === 0) {
+        this.frame += 1;
+      }
+
+      xOffset = (this.frame % 9) * this.spriteInfo.width;
+      yOffset = 0;
+
+      context2d.save();
+      context2d.translate(this.position.x, this.position.y);
+      if (image) {
+        context2d.drawImage(
+          image,
+          xOffset, yOffset,
+          this.spriteInfo.width, this.spriteInfo.height,
+          -this.spriteInfo.halfWidth, -this.spriteInfo.halfHeight,
+          this.spriteInfo.width, this.spriteInfo.height
+        );
+      }
+      context2d.restore();
+    };
+
+    constructor(spriteInfo: SpriteInfo, animationInfo: AnimationInfo, x: number, y: number) {
+      super(spriteInfo, x, y);
+      this.animationInfo = animationInfo;
+      this.frame = 0;
+      this.tickCount = -1;
+      this.finished = false;
     }
   }
 
@@ -255,14 +318,10 @@ module GAME {
       if (image) {
         context2d.drawImage(
           image,
-          (this.thrusting ? this.spriteInfo.width : 0),
-          0,
-          this.spriteInfo.width,
-          this.spriteInfo.height,
-          -this.spriteInfo.halfWidth,
-          -this.spriteInfo.halfHeight,
-          this.spriteInfo.width,
-          this.spriteInfo.height
+          (this.thrusting ? this.spriteInfo.width : 0), 0,
+          this.spriteInfo.width, this.spriteInfo.height,
+          -this.spriteInfo.halfWidth, -this.spriteInfo.halfHeight,
+          this.spriteInfo.width, this.spriteInfo.height
         );
       }
       context2d.restore();
@@ -295,22 +354,31 @@ module GAME {
     static getSprite(what: string, x: number, y: number): any {
       switch (what) {
         case "asteroid-small":
-          return new SimulationObject(SpriteConfigs.asteroidSmallSpriteInfo, x, y);
+          return new Asteroid(
+            SpriteConfigs.asteroidSmallSpriteInfo,
+            SpriteConfigs.asteroidAnimationInfo,
+            x, y);
         case "asteroid-medium":
-          return new SimulationObject(SpriteConfigs.asteroidMediumSpriteInfo, x, y);
+          return new Asteroid(
+            SpriteConfigs.asteroidMediumSpriteInfo,
+            SpriteConfigs.asteroidAnimationInfo,
+            x, y);
         case "asteroid-large":
-          return new SimulationObject(SpriteConfigs.asteroidLargeSpriteInfo, x, y);
+          return new Asteroid(
+            SpriteConfigs.asteroidLargeSpriteInfo,
+            SpriteConfigs.asteroidAnimationInfo,
+            x, y);
         case "missile":
           return new Missile(SpriteConfigs.missileSpriteInfo, x, y);
         case "ship":
           return new Ship(SpriteConfigs.shipSpriteInfo, x, y);
         case "explosion":
-          return new AnimatedSprite(
+          return new Effect(
             SpriteConfigs.explosionSpriteInfo,
             SpriteConfigs.explosionAnimationInfo,
             x, y );
         case "shield-damage":
-          return new AnimatedSprite(
+          return new Effect(
             SpriteConfigs.shieldDamageSpriteInfo,
             SpriteConfigs.shieldDamageAnimationInfo,
             x, y);

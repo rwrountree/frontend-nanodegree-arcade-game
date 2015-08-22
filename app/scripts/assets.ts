@@ -6,10 +6,9 @@ module GAME {
   "use strict";
   export module Assets.Images {
     export var art: Array<string> = [
-      "images/gameart/asteroid1.opengameart.warspawn.png",
-      "images/gameart/asteroid_blue.png",
-      "images/gameart/asteroid_blue_medium.png",
-      "images/gameart/asteroid_blue_small.png",
+      "images/gameart/asteroid_large_animated.png",
+      "images/gameart/asteroid_medium_animated.png",
+      "images/gameart/asteroid_small_animated.png",
       "images/gameart/debris2_blue.png",
       "images/gameart/double_ship.png",
       "images/gameart/explosion.hasgraphics.png",

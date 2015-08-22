@@ -34,7 +34,7 @@ module GAME {
   }
 
   export class RiceRocks {
-    private static ASTEROID_RESPAWN_TIME: number = 30;
+    private static ASTEROID_RESPAWN_TIME: number = 20;
 
     init: NO_PARAMS_VOID_RETURN_FUNC = (): void => {
       this.reset();
@@ -81,7 +81,7 @@ module GAME {
       this.missiles = keepers;
     };
 
-    update: { (dt: number): void; } = (dt: number) => {
+    update: { (dt: number): void; } = () => {
       Renderer.instance.pushRenderFunction(this.background.render);
 
       this.debrisField.update();
@@ -104,7 +104,7 @@ module GAME {
         }
       });
 
-      this.effects.forEach((effect: AnimatedSprite) => {
+      this.effects.forEach((effect: Effect) => {
           if (effect.active) {
             Renderer.instance.pushRenderFunction(effect.render);
           }
@@ -123,19 +123,23 @@ module GAME {
     };
 
     spawnAsteroid: NO_PARAMS_VOID_RETURN_FUNC = () => {
-      var asteroid: SimulationObject,
-        randomChoice: number = getRandomInt(1, 3);
+      var asteroid:Asteroid,
+        randomChoice:number = getRandomInt(1, 3);
 
       if (randomChoice === 1) {
-        asteroid =  SpriteMaker.getSprite("asteroid-large", 0, 0);
+        asteroid = SpriteMaker.getSprite("asteroid-large", 0, 0);
       } else if (randomChoice === 2) {
         asteroid = SpriteMaker.getSprite("asteroid-medium", 0, 0);
       } else {
         asteroid = SpriteMaker.getSprite("asteroid-small", 0, 0);
       }
 
-      asteroid.position.x = getRandomInt(0, SCREEN_WIDTH);
-      asteroid.position.y = getRandomInt(0, SCREEN_HEIGHT);
+      var positionX: number = getRandomInt(1, 2);
+      var positionY: number = getRandomInt(1, 2);
+      positionX = positionX === 1 ? 0 : SCREEN_WIDTH;
+      positionY = positionY === 1 ? 0 : SCREEN_HEIGHT;
+      asteroid.position.x = positionX; // getRandomInt(0, SCREEN_WIDTH);
+      asteroid.position.y = positionY; // getRandomInt(0, SCREEN_HEIGHT);
       asteroid.velocity.x = getRandomInt(-300, 300) / 100;
       asteroid.velocity.y = getRandomInt(-300, 300) / 100;
       asteroid.angularVelocity = getRandomInt(-10, 10) / 100;
@@ -220,35 +224,16 @@ module GAME {
       }
     };
 
-    shoot(): void {
-      var forwardVector2d: Vector2d,
-          player: Ship = this.player,
-          missile: Missile = SpriteMaker.getSprite("missile", 0, 0);
-
-      forwardVector2d = Vector2d.angleToVector2d(this.player.angle);
-      missile.position.set(
-        player.position.x + player.radius * forwardVector2d.x,
-        player.position.y + player.radius * forwardVector2d.y
-      );
-      missile.velocity.set(
-        player.velocity.x + 6 * forwardVector2d.x,
-        player.velocity.y + 6 * forwardVector2d.y
-      );
-      missile.angle = player.angle;
-      this.missiles.push(missile);
-      new Audio("audio/missile.mp3").play();
-    }
-
     private background: Background;
     private debrisField: DebrisField;
-    private asteroids: Array<SimulationObject>;
+    private asteroids: Array<Asteroid>;
     private player: Ship;
 
     private gameState: GameState;
     private soundTrack: HTMLAudioElement;
     private highScore: number;
     private spawnTickCounter: number;
-    private effects: Array<AnimatedSprite>;
+    private effects: Array<Effect>;
     private missiles: Array<Missile>;
 
     constructor() {
@@ -283,6 +268,25 @@ module GAME {
       this.soundTrack.currentTime = 0;
       this.soundTrack.play();
       this.gameState = GameState.RUNNING;
+    }
+
+    shoot(): void {
+      var forwardVector2d: Vector2d,
+        player: Ship = this.player,
+        missile: Missile = SpriteMaker.getSprite("missile", 0, 0);
+
+      forwardVector2d = Vector2d.angleToVector2d(this.player.angle);
+      missile.position.set(
+        player.position.x + player.radius * forwardVector2d.x,
+        player.position.y + player.radius * forwardVector2d.y
+      );
+      missile.velocity.set(
+        player.velocity.x + 6 * forwardVector2d.x,
+        player.velocity.y + 6 * forwardVector2d.y
+      );
+      missile.angle = player.angle;
+      this.missiles.push(missile);
+      new Audio("audio/missile.mp3").play();
     }
   }
 }
