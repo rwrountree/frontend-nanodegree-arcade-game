@@ -421,7 +421,7 @@ var GAME;
             // play missile sound
             new Audio("audio/missile.mp3").play();
         };
-        RiceRocks.ASTEROID_RESPAWN_TIME = 30;
+        RiceRocks.ASTEROID_RESPAWN_TIME = 15;
         return RiceRocks;
     })();
     GAME.RiceRocks = RiceRocks;

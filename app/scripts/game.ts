@@ -45,7 +45,7 @@ module GAME {
    * This is the game!
    */
   export class RiceRocks {
-    private static ASTEROID_RESPAWN_TIME: number = 30;
+    private static ASTEROID_RESPAWN_TIME: number = 15;
 
     /**
      * Starts the game initially
