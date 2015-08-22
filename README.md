@@ -23,3 +23,7 @@ It's an asteroids(ish) clone. Yes, another Asteroids clone! Behold! :D
 * There is no limit on how fast you can fire (not responsible for the spacebar on your keyboard :D)
 * The ship can go relatively fast, but I wouldn't recommend going full speed.
 * Asteroids come out of the corners. Avoid the corners.
+
+## Credits
+* Art assets created by Kim Lathrop
+* Audio assets by Sound Dogs
