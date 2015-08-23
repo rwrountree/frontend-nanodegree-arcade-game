@@ -402,7 +402,6 @@ var GAME;
             this.missiles = [];
             this.background = GAME.SpriteMaker.getSprite("background", 0, 0);
             this.player = GAME.SpriteMaker.getSprite("ship", GAME.SCREEN_WIDTH / 2, GAME.SCREEN_HEIGHT / 2);
-            // this.soundTrack.stop();
             this.soundTrack.currentTime = 0;
             this.soundTrack.play();
         };

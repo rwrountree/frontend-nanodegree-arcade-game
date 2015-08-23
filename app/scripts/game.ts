@@ -444,6 +444,7 @@ module GAME {
       this.gameState = GameState.SPLASH;
       this.soundTrack = new Audio("audio/soundtrack.mp3");
       this.soundTrack.loop = true;
+      this.soundTrack.play();
       this.highScore = 0;
       this.spawnTickCounter = RiceRocks.ASTEROID_RESPAWN_TIME;
       // center the splash screen
@@ -502,6 +503,7 @@ module GAME {
       this.background = SpriteMaker.getSprite("background", 0, 0);
       this.player = SpriteMaker.getSprite("ship", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
       this.soundTrack.currentTime = 0;
+      this.soundTrack.play();
     }
 
     /**
