@@ -1,0 +1,11 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+app/scripts/game.js
+app/scripts/includes.js
+app/scripts/renderer.js
+app/scripts/resources.js
+app/scripts/vector2d.js
+app/scripts/assets.js
+app/scripts/sprite-configs.js
+app/scripts/sprite-maker.js
+gulpfile.babel.js
