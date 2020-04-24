@@ -1,0 +1,8 @@
+title: Frontend-nanodegree-arcade-game
+description: Asteroids clone using JavaScript and HTML5 Canvas
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-slate
+
+gems:
+  - jekyll-mentions
